@@ -1,20 +1,13 @@
 <?php
 
+require_once ("Query/Table.php");
 
-require_once("Connection/ConnectionFactory.php");
+$users = new Table('users');
 
+$result = $users->select(['email'])->where(['name' => 'mohamed osama','department_id' => 1])->get();
 
-$db = new ConnectionFactory();
+print_r($result);
 
-$connect = $db->setConnection('mysql');
-
-$con = $connect->createConnection(['db' => 'atms']);
-
-$statement = $con->prepare('SELECT name from users');
-
-$statement->execute();
-
-$result = $statement->fetchAll();
 
 
 

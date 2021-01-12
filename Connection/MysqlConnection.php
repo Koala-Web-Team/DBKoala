@@ -2,7 +2,6 @@
 
 require_once ("Connection/IConnection.php");
 
-
 class MysqlConnection implements IConnection
 {
 
@@ -26,9 +25,9 @@ class MysqlConnection implements IConnection
     }
 
     /* A method handling setting up params and creating a connection */
-    public function createConnection(array $attributes = []){
+    public function createConnection(){
 
-        $this->setConnectionAttributes($attributes);
+        $this->setConnectionAttributes();
 
         $this->charset = "utf8mb4";
         $this->dsn = "mysql:host=$this->host;dbname=$this->db;charset=$this->charset";
@@ -53,118 +52,75 @@ class MysqlConnection implements IConnection
 
 
     /* A method handling setting object attributes for connection */
-    private function setConnectionAttributes( array $attributes = [] )
+    private function setConnectionAttributes()
     {
-        foreach ( $attributes as $key => $value ) {
-            if ( property_exists( $this, mb_strtolower( $key ) ) ) {
-                $key = mb_strtolower( $key );
-                $this->$key = $value;
-            }
-        }
+        $this->host=$_ENV['DB_HOST'];
+        $this->db=$_ENV['DB_DATABASE'];
+        $this->password=$_ENV['DB_PASSWORD'];
+        $this->username=$_ENV['DB_USERNAME'];
     }
 
 
-    /**
-     * @return null
-     */
     public function getConnection()
     {
         return $this->connection;
     }
 
-    /**
-     * @return null
-     */
     public function getCharset()
     {
         return $this->charset;
     }
 
-    /**
-     * @param null $charset
-     */
     public function setCharset($charset)
     {
         $this->charset = $charset;
     }
 
-    /**
-     * @param null $dsn
-     */
     public function setDsn($dsn)
     {
         $this->dsn = $dsn;
     }
 
-    /**
-     * @return null
-     */
     public function getDsn()
     {
         return $this->dsn;
     }
 
-    /**
-     * @param string $host
-     */
     public function setHost($host)
     {
         $this->host = $host;
     }
 
-    /**
-     * @return string
-     */
     public function getHost()
     {
         return $this->host;
     }
 
-    /**
-     * @param string $pass
-     */
     public function setPass($pass)
     {
         $this->pass = $pass;
     }
 
-
-    /**
-     * @return string
-     */
     public function getPass()
     {
         return $this->pass;
     }
 
-    /**
-     * @param string $user
-     */
     public function setUser($user)
     {
         $this->user = $user;
     }
 
-    /**
-     * @return string
-     */
     public function getUser()
     {
         return $this->user;
     }
 
-
-    /**
-     * @param string $db
-     */
     public function setDb($db)
     {
         $this->db = $db;
     }
 
-    /**
-     * @return string
-     */
     public function getDb()
     {
         return $this->db;
