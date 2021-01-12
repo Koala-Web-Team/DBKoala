@@ -8,6 +8,7 @@ class Table extends ConnectionFactory
     private $table;
     private $dbms;
     private $connection;
+    private $query;
 
     public function __construct( $table ){
         parent::__construct();
@@ -70,11 +71,27 @@ class Table extends ConnectionFactory
 
         $columns_implode = implode(',',$columns);
 
-        $stmt = $this->connection->prepare('select '.$columns_implode.' from '.$this->table);
+        $this->query = 'select '.$columns_implode.' from '.$this->table;
+
+        return $this;
+
+    }
+
+    public function where( $conditions = [] ){
+
+        $this->query .= " where"." ".implode(' and ',$this->arraymap(function($k,$v){return "$k = '$v'";},$conditions));
+
+        return $this;
+    }
+
+    public function get(){
+
+        $stmt = $this->connection->prepare($this->query);
 
         $stmt->execute();
 
         $result = $stmt->fetchAll();
+
 
         return $result;
     }
