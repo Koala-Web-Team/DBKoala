@@ -14,7 +14,7 @@ class ConnectionFactory
         $this->dbms = $_ENV['DB_CONNECTION'];
     }
 
-    public function setConnection(){
+    protected function setConnection(){
         switch ( $this->dbms ) {
             case 'mysql':
                 $db = MysqlConnection::getInstance();

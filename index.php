@@ -2,9 +2,10 @@
 
 require_once ("Query/Table.php");
 
-$users = new Table('users');
+$user = new Table('osama');
 
-$result = $users->select(['email'])->where(['name' => 'mohamed osama','department_id' => 1])->get();
+$result = $user->select(['fname','lname','phone'])->get();
+
 
 print_r($result);
 
