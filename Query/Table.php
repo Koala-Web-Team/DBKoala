@@ -9,6 +9,7 @@ class Table extends ConnectionFactory
     private $dbms;
     private $connection;
     private $query;
+    private static $state;
 
     public function __construct( $table ){
         parent::__construct();
@@ -20,19 +21,15 @@ class Table extends ConnectionFactory
 
     public function create( $columns = [] ){
 
-//        foreach ( $columns as $key => $value ) {
-//            if(!$this->columnexist($key)) {
-//                throw new InvalidArgumentException('lkfds');
-//            }
-//        }
+        $keys = implode(',',$this->arraymap(function($key,$value){return "$key";},$columns));
 
-        $keys = implode(',',$this->arraymap(function($k,$v){return "$k";},$columns));
+        $values = implode(',',$this->arraymap(function($key,$value){return "$value";},$columns));
 
-        $values = implode(',',$this->arraymap(function($k,$v){return "$v";},$columns));
+        $bind_params = implode(',',$this->arraymap(function($key,$value){return "?";},$columns));
 
         $array_value = explode(',',$values);
 
-        $sql = "INSERT INTO users ($keys) VALUES (?,?,?)";
+        $sql = "INSERT INTO $this->table ($keys) VALUES ($bind_params)";
 
         $stmt= $this->connection->prepare($sql);
 
@@ -42,24 +39,17 @@ class Table extends ConnectionFactory
 
     public function update( $id , $columns = [] ){
 
-//        foreach ( $columns as $key => $value ) {
-//            if(!$this->columnexist($key)) {
-//                throw new \http\Exception\InvalidArgumentException('dkfjdnsfn');
-//            }
-//        }
+        $keys = implode(',',$this->arraymap(function($key,$value){return "$key = ?";},$columns));
 
-        $keys = implode(',',$this->arraymap(function($k,$v){return "$k = ?";},$columns));
-
-        $values = implode(',',$this->arraymap(function($k,$v){return "$v";},$columns));
+        $values = implode(',',$this->arraymap(function($key,$value){return "$value";},$columns));
 
         $array_value = explode(',',$values);
 
-        $sql = "UPDATE users SET $keys WHERE id = $id";
+        $sql = "UPDATE $this->table SET $keys WHERE id = $id";
 
         $stmt= $this->connection->prepare($sql);
 
         $stmt->execute($array_value);
-
     }
 
     public function delete($id){
@@ -68,63 +58,116 @@ class Table extends ConnectionFactory
     }
 
     public function select( $columns = [] ){
-
         $columns_implode = implode(',',$columns);
-
         $this->query = 'select '.$columns_implode.' from '.$this->table;
-
         return $this;
-
     }
 
-    public function where( $conditions = [] ){
+    public function where( $column,$value , $operator = '='){
 
-        $this->query .= " where"." ".implode(' and ',$this->arraymap(function($k,$v){return "$k = '$v'";},$conditions));
+        if( self::$state == null ) {
+            self::$state = 'called';
+            $this->query .= " where $column $operator '$value'";
+        }
+        else {
+            $this->query .= " and $column $operator '$value'";
+        }
+        return $this;
+    }
 
+    public function orWhere( $column,$value ){
+
+        if( self::$state == null ) {
+            self::$state = 'called';
+            $this->query .= " where $column = '$value'";
+        }
+        else {
+            $this->query .= " or $column = '$value'";
+        }
+        return $this;
+    }
+
+    public function whereBetween( $column,$values = [] ){
+
+        $range = implode(' and ',$values);
+
+        if( self::$state == null ) {
+            self::$state = 'called';
+            $this->query .= " where $column between $range";
+        }
+        else {
+            $this->query .= " and $column between $range";
+        }
+        return $this;
+    }
+
+    public function orWhereBetween( $column,$values = [] ){
+
+        $range = implode(' and ',$values);
+
+        if( self::$state == null ) {
+            self::$state = 'called';
+            $this->query .= " where $column between $range";
+        }
+        else {
+            $this->query .= " or $column between $range";
+        }
+        return $this;
+    }
+
+    public function whereNotBetween( $column,$values = [] ){
+
+        $range = implode(' and ',$values);
+
+        if( self::$state == null ) {
+            self::$state = 'called';
+            $this->query .= " where $column not between $range";
+        }
+        else {
+            $this->query .= " and $column not between $range";
+        }
+        return $this;
+    }
+
+    public function orWhereNotBetween( $column,$values = [] ){
+
+        $range = implode(' and ',$values);
+
+        if( self::$state == null ) {
+            self::$state = 'called';
+            $this->query .= " where $column not between $range";
+        }
+        else {
+            $this->query .= " or $column not between $range";
+        }
         return $this;
     }
 
     public function get(){
 
         $stmt = $this->connection->prepare($this->query);
-
         $stmt->execute();
-
         $result = $stmt->fetchAll();
-
-
         return $result;
     }
 
-//    private function columnexist( $column ){
-//
-//        $count = $this->select([$column]);
-//
-//        if(count($count) > 0) {
-//            return true;
-//        }
-//        else {
-//            return false;
-//        }
-//
-//    }
+    public function all(){
+        $this->query = "select * from $this->table";
+        return $this->get();
+    }
+
 
     public function arraymap( $callback , $array ){
-
         $r = array();
-
         foreach ($array as $key=>$value) {
             $r[$key] = $callback($key, $value);
         }
-
         return $r;
     }
-
 
     public function getTable(){
         return $this->table;
     }
-
 
     public function setTable($table){
         $this->table = $table;
