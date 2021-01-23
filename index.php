@@ -1,13 +1,12 @@
 <?php
 
-require_once ("Query/Table.php");
+require_once("QueryBuilder/Table.php");
 
-$user = new Table('osama');
+$user = new Table('users');
 
-$result = $user->select(['fname','lname','phone'])->get();
+$result = $user->find('1');
 
-
-print_r($result);
+print_r($result->first_name);
 
 
 

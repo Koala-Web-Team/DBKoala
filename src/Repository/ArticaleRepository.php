@@ -19,10 +19,7 @@ class ArticaleRepository extends ServiceEntityRepository
         parent::__construct($registry, Articale::class);
     }
 
-    // /**
-    //  * @return Articale[] Returns an array of Articale objects
-    //  */
-    /*
+
     public function findByExampleField($value)
     {
         return $this->createQueryBuilder('a')
@@ -34,9 +31,9 @@ class ArticaleRepository extends ServiceEntityRepository
             ->getResult()
         ;
     }
-    */
 
-    /*
+
+
     public function findOneBySomeField($value): ?Articale
     {
         return $this->createQueryBuilder('a')
@@ -46,5 +43,4 @@ class ArticaleRepository extends ServiceEntityRepository
             ->getOneOrNullResult()
         ;
     }
-    */
 }
