@@ -4,12 +4,15 @@ require_once("QueryBuilder/Table.php");
 
 $user = new Table('users');
 
-$result = $user->find('1');
+$result = $user->chunk(2, function ($result) {
+	echo "<pre>";
+	var_dump($result);
+	echo "</pre>";
+});
 
-print_r($result->first_name);
-
-
-
+//echo "<pre>";
+//var_dump($result);
+//echo "</pre>";
 
 
 

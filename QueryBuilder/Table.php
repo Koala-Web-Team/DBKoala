@@ -2,7 +2,7 @@
 
 require_once("Connection/ConnectionFactory.php");
 
-class Table extends ConnectionFactory
+	class Table extends ConnectionFactory
 {
 
     private $table;
@@ -13,11 +13,9 @@ class Table extends ConnectionFactory
     private static $state;
     private static $select;
 
-
 //    TODO::list
 
 //    array of conditions
-
 
     public function __construct( $table ){
         parent::__construct();
@@ -133,15 +131,23 @@ class Table extends ConnectionFactory
         return $this;
     }
 
-    public function where( $column,$value,$operator = '=' ,$linker = 'and'){
+	public function where( $column, $value = "", $operator = '=', $linker = 'AND' ) {
+		if ( $value == "" ) {
+			$value = $column;
+			$column = "id";
+		}
 
-        $this->queryValues[] = $value;
+		$this->queryValues[] = $value;
 
-        if( self::$state == null ) {
-            self::$state = 'called';
+		if ( self::$state == null ) {
+			self::$state = 'called';
+			$linker = "WHERE";
+		}
+		$this->query .= " $linker $column $operator ?";
 
-            $this->query .= " where $column $operator ?";
-//
+		return $this;
+	}
+
 //            if(is_array($column))
 //            {
 //                $nestedwhere = null;
@@ -157,14 +163,26 @@ class Table extends ConnectionFactory
 //            else {
 //                $this->query .= " where $column $operator ?";
 //            }
-        }
-        else {
-            $this->query .= " $linker $column $operator ?";
-        }
-        return $this;
-    }
 
-    public function orWhere( $column,$value ,$operator = '=' ){
+	public function groupWhere( callable $callback, $linker = "AND" ) {
+    	if ( self::$state == null ) {
+    		self::$state = "called";
+    		$linker = "WHERE";
+		}
+
+    	$this->query .= " " . $linker . "(";
+    	call_user_func( $callback, $this );
+    	$this->query .= ")";
+		$this->query = str_replace("( AND", "(", $this->query);
+
+    	return $this;
+	}
+
+	public function groupOrWhere( callable $callback ) {
+		return $this->groupWhere($callback, "OR");
+	}
+
+	public function orWhere( $column,$value ,$operator = '=' ){
 
         $this->queryValues[] = $value;
 
@@ -520,6 +538,33 @@ class Table extends ConnectionFactory
         }
         return $this;
     }
+
+    public function groupBy( $column ) {
+		$this->query .= " GROUP BY " . $column;
+		return $this;
+	}
+
+	public function having( $condition ) {
+		$this->query .= " HAVING  " . $condition;
+		return $this;
+	}
+
+	public function chunk( $number, callable $callback) {
+    	$iteration = 0;
+		do {
+			$tempQuery = $this->query;
+			$this->query .= " LIMIT " . ($iteration * $number) . ", " . $number;
+			$result = $this->get();
+
+			if ( empty($result) ) {
+				break;
+			}
+
+			call_user_func($callback, $result);
+			$this->query = $tempQuery;
+			$iteration++;
+		} while ( true );
+	}
 
     public function from( $table,$as ){
 
