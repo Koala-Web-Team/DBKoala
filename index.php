@@ -4,7 +4,7 @@ require_once("QueryBuilder/Table.php");
 
 $user = new Table('users');
 
-$result = $user->count();
+$result = $user->distinct(['name'])->get();
 
 print_r($result);
 
