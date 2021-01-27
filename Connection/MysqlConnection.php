@@ -56,8 +56,8 @@ class MysqlConnection implements IConnection
     {
         $this->host=$_ENV['DB_HOST'];
         $this->db=$_ENV['DB_DATABASE'];
-        $this->password=$_ENV['DB_PASSWORD'];
-        $this->username=$_ENV['DB_USERNAME'];
+        $this->pass=$_ENV['DB_PASSWORD'];
+        $this->user=$_ENV['DB_USERNAME'];
     }
 
 
