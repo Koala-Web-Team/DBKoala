@@ -84,52 +84,32 @@ class Table extends ConnectionFactory
     }
 
 
-    public function select( $columns = [] ){
+    public function select( $columns = ['*'] ){
 
         $columns_implode = implode(',',$columns);
 
         self::$select = true;
 
         if( self::$state == null ) {
-            if( count($columns) > 0 ) {
-                $this->query = 'select ' . $columns_implode . ' from ' . $this->table;
-            }
-            else {
-                $this->query = 'select * from ' . $this->table;
-            }
+            $this->query = 'select ' . $columns_implode . ' from ' . $this->table;
         }
         else {
-            if( count($columns) > 0 ) {
-                $this->query = 'select '.$columns_implode.' from '.$this->table." ".$this->query;
-            }
-            else {
-                $this->query = 'select * from '.$this->table." ".$this->query;
-            }
+            $this->query = 'select '.$columns_implode.' from '.$this->table." ".$this->query;
         }
         return $this;
     }
 
-    public function distinct( $columns = [] ){
+    public function distinct( $columns = ['*'] ){
 
         $columns_implode = implode(',',$columns);
 
         self::$select = true;
 
         if( self::$state == null ) {
-            if(count($columns) > 0) {
-                $this->query = 'select distinct' . $columns_implode . ' from ' . $this->table;
-            }
-            else {
-                $this->query = 'select distinct * from ' . $this->table;
-            }
+            $this->query = 'select distinct ' . $columns_implode . ' from ' . $this->table;
         }
         else {
-            if( count($columns) > 0 ) {
-                $this->query = 'select distinct '.$columns_implode.' from '.$this->table." ".$this->query;
-            }
-            else {
-                $this->query = 'select distinct * from '.$this->table." ".$this->query;
-            }
+            $this->query = 'select distinct '.$columns_implode.' from '.$this->table." ".$this->query;
         }
         return $this;
     }
