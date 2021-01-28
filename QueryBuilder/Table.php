@@ -453,6 +453,15 @@ class Table extends ConnectionFactory
         return $this->aggregate();
     }
 
+	public function raw($CustomQuery){
+		$this->query.= $CustomQuery;
+		return $this;
+	}
+
+	public function selectRaw($CustomQuery){
+		$this->query='select'." ".$CustomQuery." ".'from'." ".$this->table;
+		return $this;
+	}
     public function from( $table,$as ){
 
         if( $as ) {
