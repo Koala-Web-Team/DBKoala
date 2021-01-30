@@ -12,6 +12,8 @@ class Table extends ConnectionFactory
     private $queryValues = [];
     private static $state;
     private static $select;
+    private static $orderBy;
+
 
 
     public function __construct( $table ){
@@ -524,6 +526,24 @@ class Table extends ConnectionFactory
         }
     }
 
+    public  function orderBy($column , $filter='asc'){
+        if( self::$orderBy == null ){
+            self::$orderBy='called';
+            $this->query.= " order by '$column'  $filter";
+        }
+        else{
+            $this->query.= " , '$column' $filter ";
+        }
+            return $this;
+    }
+    
+    
+    public function latest($column='id'){
+        return $this->orderBy($column, 'desc');
+    }
+        public function oldest($column='id'){
+            return $this->orderBy($column, 'asc');
+        }
     public function find($id){
         $result = $this->where('id',$id)->first();
         return $result;
