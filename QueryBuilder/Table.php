@@ -14,6 +14,12 @@ class Table extends ConnectionFactory
     private static $select;
     private static $orderBy;
 
+    //TODO
+//    exist
+//    doesnt exist
+//    absy tasks
+//    updates
+
 
 
     public function __construct( $table ){
@@ -89,30 +95,95 @@ class Table extends ConnectionFactory
     public function select( $columns = ['*'] ){
 
         $columns_implode = implode(',',$columns);
-
         self::$select = true;
+        $this->query = 'select '.$columns_implode.' from '.$this->table." ".$this->query;
+        return $this;
+    }
 
-        if( self::$state == null ) {
-            $this->query = 'select ' . $columns_implode . ' from ' . $this->table;
+    public function selectlang( $lang , $languages , $columns = []){
+
+        if(!is_array($columns)){
+            throw new Exception('dfdsfdf');
         }
-        else {
-            $this->query = 'select '.$columns_implode.' from '.$this->table." ".$this->query;
+
+        $sql = 'SELECT COLUMN_NAME FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA`="'.$_ENV['DB_DATABASE'].'" AND `TABLE_NAME`="'.$this->table.'"';
+        $stmt = $this->connection->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->fetchAll();
+
+        $table_columns = [];
+
+        $lang_columns = [];
+
+        $i = 0;
+
+        foreach ($result as $res){
+            array_push($table_columns,$result[$i]['COLUMN_NAME']);
+            $i++;
         }
+
+        if(count($columns) > 0) {
+            foreach ($columns as $col) {
+                if (($key = array_search($col . '_' . $lang, $table_columns)) !== false) {
+                    array_push($lang_columns, $col . '_' . $lang);
+                } else {
+                    array_push($lang_columns, $col);
+                }
+            }
+        }
+        else{
+            foreach ($table_columns as $col) {
+                foreach ($languages as $lang) {
+                    if (strpos($col, '_' . $lang) == true || strpos($col, '_'.$lang) == false) {
+                        array_push($lang_columns, $col);
+                    }
+                }
+            }
+        }
+
+        $columns_implode = implode(',',$lang_columns);
+        self::$select = true;
+        $this->query = 'select '.$columns_implode.' from '.$this->table." ".$this->query;
+        return $this;
+    }
+
+    public function selectExcept( $columns ){
+
+        if(!is_array($columns)){
+            throw new Exception('dfdsfdf');
+        }
+
+        $sql = 'SELECT COLUMN_NAME FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA`="'.$_ENV['DB_DATABASE'].'" AND `TABLE_NAME`="'.$this->table.'"';
+        $stmt = $this->connection->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->fetchAll();
+
+        $table_columns = [];
+
+        $i = 0;
+
+        foreach ($result as $res){
+            array_push($table_columns,$result[$i]['COLUMN_NAME']);
+            $i++;
+        }
+
+        foreach ($columns as $col) {
+            if (($key = array_search($col, $table_columns)) !== false) {
+                unset($table_columns[$key]);
+            }
+        }
+
+        $columns_implode = implode(',',$table_columns);
+        self::$select = true;
+        $this->query = 'select '.$columns_implode.' from '.$this->table." ".$this->query;
         return $this;
     }
 
     public function distinct( $columns = ['*'] ){
 
         $columns_implode = implode(',',$columns);
-
         self::$select = true;
-
-        if( self::$state == null ) {
-            $this->query = 'select distinct ' . $columns_implode . ' from ' . $this->table;
-        }
-        else {
-            $this->query = 'select distinct '.$columns_implode.' from '.$this->table." ".$this->query;
-        }
+        $this->query = 'select distinct '.$columns_implode.' from '.$this->table." ".$this->query;
         return $this;
     }
 
@@ -400,7 +471,7 @@ class Table extends ConnectionFactory
         return ! $this->exists();
     }
 
-    public function count($column = '*'){
+    public function count( $column = '*' ){
         self::$select = 'called';
         if( self::$state == null ) {
             $this->query = "select count($column)  from  $this->table";
@@ -411,7 +482,7 @@ class Table extends ConnectionFactory
         return $this->aggregate();
     }
 
-    public function max($column){
+    public function max( $column ){
         self::$select = 'called';
         if( self::$state == null ) {
             $this->query = "select max($column)  from  $this->table";
@@ -422,7 +493,7 @@ class Table extends ConnectionFactory
         return $this->aggregate();
     }
 
-    public function min($column){
+    public function min( $column ){
         self::$select = 'called';
         if( self::$state == null ) {
             $this->query = "select min($column)  from  $this->table";
@@ -433,7 +504,7 @@ class Table extends ConnectionFactory
         return $this->aggregate();
     }
 
-    public function avg($column){
+    public function avg( $column ){
         self::$select = 'called';
         if( self::$state == null ) {
             $this->query = "select avg($column)  from  $this->table";
@@ -444,7 +515,7 @@ class Table extends ConnectionFactory
         return $this->aggregate();
     }
 
-    public function sum($column){
+    public function sum( $column ){
         self::$select = 'called';
         if( self::$state == null ) {
             $this->query = "select sum($column)  from  $this->table";
@@ -456,14 +527,16 @@ class Table extends ConnectionFactory
     }
 
 	public function raw($CustomQuery){
-		$this->query.= $CustomQuery;
+		$this->query = $CustomQuery;
 		return $this;
 	}
 
-	public function selectRaw($CustomQuery){
-		$this->query='select'." ".$CustomQuery." ".'from'." ".$this->table;
+	public function selectRaw( $CustomQuery ){
+        self::$select = true;
+        $this->query = "select $CustomQuery from $this->table $this->query";
 		return $this;
 	}
+
     public function from( $table,$as ){
 
         if( $as ) {
@@ -475,12 +548,39 @@ class Table extends ConnectionFactory
         return $this;
     }
 
-    public function get(){
+    public  function orderBy( $column , $filter = 'asc' ){
+        if( self::$orderBy == null ){
+            self::$orderBy = " order by '$column' $filter";
+        }
+        else{
+            self::$orderBy .= " , '$column' $filter ";
+        }
+        return $this;
+    }
+
+    public function latest( $column = 'id' ){
+        return $this->orderBy($column, 'desc');
+    }
+
+    public function oldest( $column = 'id' ){
+        return $this->orderBy($column, 'asc');
+    }
+
+
+    public function find($id){
+        $result = $this->where('id',$id)->first();
+        return $result;
+    }
+
+    public function get( $format = 'array' ){
 
         if($this->query == null) {
             throw new Exception('no query executed to be get');
         }
         else {
+
+            $this->query .= self::$orderBy;
+
             if( self::$select == false) {
                 $this->query = " select * from $this->table $this->query";
             }
@@ -488,6 +588,14 @@ class Table extends ConnectionFactory
             $stmt = $this->connection->prepare($this->query);
             $stmt->execute($this->queryValues);
             $result = $stmt->fetchAll();
+
+            if($format == "json") {
+                $result = json_encode($result);
+            }
+            elseif($format == "object"){
+                $result = (object) $result;
+            }
+
             return $result;
         }
     }
@@ -498,10 +606,6 @@ class Table extends ConnectionFactory
             throw new Exception('no query executed to be get');
         }
         else {
-            if( self::$select == false) {
-                $this->query = " select * from $this->table $this->query";
-            }
-
             $stmt = $this->connection->prepare($this->query);
             $stmt->execute($this->queryValues);
             $result = $stmt->fetchColumn();
@@ -515,6 +619,9 @@ class Table extends ConnectionFactory
             throw new Exception('no query executed to be get');
         }
         else {
+
+            $this->query .= self::$orderBy;
+
             if (self::$select == false) {
                 $this->query = " select * from $this->table $this->query";
             }
@@ -524,29 +631,6 @@ class Table extends ConnectionFactory
             $result = $stmt->fetch(PDO::FETCH_OBJ);
             return $result;
         }
-    }
-
-    public  function orderBy($column , $filter='asc'){
-        if( self::$orderBy == null ){
-            self::$orderBy='called';
-            $this->query.= " order by '$column'  $filter";
-        }
-        else{
-            $this->query.= " , '$column' $filter ";
-        }
-            return $this;
-    }
-    
-    
-    public function latest($column='id'){
-        return $this->orderBy($column, 'desc');
-    }
-        public function oldest($column='id'){
-            return $this->orderBy($column, 'asc');
-        }
-    public function find($id){
-        $result = $this->where('id',$id)->first();
-        return $result;
     }
 
     public function all(){
