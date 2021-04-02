@@ -4,37 +4,18 @@ require_once("Connection/ConnectionFactory.php");
 
 class Database extends ConnectionFactory
 {
-    private $table;
-    private $dbms;
-    private $connection;
-    private $query;
-    private $queryValues = [];
-    private static $state;
-    private static $select;
-    private static $orderBy;
-
-    //TODO
-//    exist
-//    doesnt exist
-//    absy tasks
-//    updates
-
-
 
     public function __construct(){
         parent::__construct();
-        $this->dbms = $this->setConnection();
-        $this->connection = $this->dbms->createConnection();
     }
 
     public function backup( $type = 'database' )
     {
-
         if(is_array($type)) {
             $output = '';
             foreach ($type as $table) {
                 $show_table_query = "SHOW CREATE TABLE " . $table . "";
-                $statement = $this->connection->prepare($show_table_query);
+                $statement = $this->pdo->prepare($show_table_query);
                 $statement->execute();
                 $show_table_result = $statement->fetchAll();
 
@@ -42,7 +23,7 @@ class Database extends ConnectionFactory
                     $output .= "\n\n" . $show_table_row["Create Table"] . ";\n\n";
                 }
                 $select_query = "SELECT * FROM " . $table . "";
-                $statement = $this->connection->prepare($select_query);
+                $statement = $this->pdo->prepare($select_query);
                 $statement->execute();
                 $total_row = $statement->rowCount();
 
@@ -58,13 +39,13 @@ class Database extends ConnectionFactory
         }
         else{
             $get_all_table_query = "SHOW TABLES";
-            $statement = $this->connection->prepare($get_all_table_query);
+            $statement = $this->pdo->prepare($get_all_table_query);
             $statement->execute();
             $result = $statement->fetchAll();
             $output = '';
             foreach ($result as $table) {
                 $show_table_query = "SHOW CREATE TABLE " . $table["Tables_in_buisness"] . "";
-                $statement = $this->connection->prepare($show_table_query);
+                $statement = $this->pdo->prepare($show_table_query);
                 $statement->execute();
                 $show_table_result = $statement->fetchAll();
 
@@ -72,7 +53,7 @@ class Database extends ConnectionFactory
                     $output .= "\n\n" . $show_table_row["Create Table"] . ";\n\n";
                 }
                 $select_query = "SELECT * FROM " . $table["Tables_in_buisness"] . "";
-                $statement = $this->connection->prepare($select_query);
+                $statement = $this->pdo->prepare($select_query);
                 $statement->execute();
                 $total_row = $statement->rowCount();
 
