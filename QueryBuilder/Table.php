@@ -6,8 +6,6 @@ class Table extends ConnectionFactory
 {
 
     private $table;
-    private $dbms;
-    private $connection;
     private $query;
     private $queryValues = [];
     private static $state;
@@ -25,8 +23,6 @@ class Table extends ConnectionFactory
     public function __construct( $table ){
         parent::__construct();
         $this->table = $table;
-        $this->dbms = $this->setConnection();
-        $this->connection = $this->dbms->createConnection();
     }
 
 
@@ -42,7 +38,7 @@ class Table extends ConnectionFactory
 
         $sql = "INSERT INTO $this->table ($keys) VALUES ($bind_params)";
 
-        $stmt= $this->connection->prepare($sql);
+        $stmt= $this->pdo->prepare($sql);
 
         $stmt->execute($array_value);
         
@@ -58,7 +54,7 @@ class Table extends ConnectionFactory
 
         $sql = "UPDATE $this->table SET $keys WHERE id = $id";
 
-        $stmt= $this->connection->prepare($sql);
+        $stmt= $this->pdo->prepare($sql);
 
         $stmt->execute($array_value);
     }
@@ -107,7 +103,7 @@ class Table extends ConnectionFactory
         }
 
         $sql = 'SELECT COLUMN_NAME FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA`="'.$_ENV['DB_DATABASE'].'" AND `TABLE_NAME`="'.$this->table.'"';
-        $stmt = $this->connection->prepare($sql);
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute();
         $result = $stmt->fetchAll();
 
@@ -154,7 +150,7 @@ class Table extends ConnectionFactory
         }
 
         $sql = 'SELECT COLUMN_NAME FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA`="'.$_ENV['DB_DATABASE'].'" AND `TABLE_NAME`="'.$this->table.'"';
-        $stmt = $this->connection->prepare($sql);
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute();
         $result = $stmt->fetchAll();
 
@@ -585,7 +581,7 @@ class Table extends ConnectionFactory
                 $this->query = " select * from $this->table $this->query";
             }
 
-            $stmt = $this->connection->prepare($this->query);
+            $stmt = $this->pdo->prepare($this->query);
             $stmt->execute($this->queryValues);
             $result = $stmt->fetchAll();
 
@@ -606,7 +602,7 @@ class Table extends ConnectionFactory
             throw new Exception('no query executed to be get');
         }
         else {
-            $stmt = $this->connection->prepare($this->query);
+            $stmt = $this->pdo->prepare($this->query);
             $stmt->execute($this->queryValues);
             $result = $stmt->fetchColumn();
             return $result;
@@ -626,7 +622,7 @@ class Table extends ConnectionFactory
                 $this->query = " select * from $this->table $this->query";
             }
 
-            $stmt = $this->connection->prepare($this->query);
+            $stmt = $this->pdo->prepare($this->query);
             $stmt->execute($this->queryValues);
             $result = $stmt->fetch(PDO::FETCH_OBJ);
             return $result;
