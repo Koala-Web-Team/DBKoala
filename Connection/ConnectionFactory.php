@@ -30,7 +30,6 @@ class ConnectionFactory
                 return 'sqlsrv';
             default:
                 throw new InvalidArgumentException("Unsupported database management system [{$this->dbms}].");
-                break;
         }
     }
 
