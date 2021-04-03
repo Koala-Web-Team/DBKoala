@@ -9,25 +9,29 @@ class ConnectionFactory
 {
 
     private $dbms;
+    protected $pdo;
 
     public function __construct(){
         $this->dbms = $_ENV['DB_CONNECTION'];
+        $this->setConnection();
     }
 
-    protected function setConnection(){
+    private function setConnection(){
         switch ( $this->dbms ) {
             case 'mysql':
                 $db = MysqlConnection::getInstance();
-                return $db;
+                $this->pdo = $db->createConnection();
+                break;
             case 'pgsql':
                 return 'pgsql';
             case 'sqlite':
                 return 'sqlite';
             case 'sqlsrv':
                 return 'sqlsrv';
+            default:
+                throw new InvalidArgumentException("Unsupported database management system [{$this->dbms}].");
+                break;
         }
-
-        throw new InvalidArgumentException("Unsupported database management system [{$this->dbms}].");
     }
 
     public function getDbms(){
