@@ -2,15 +2,16 @@
 
 require_once("Connection/ConnectionFactory.php");
 
-class Table extends ConnectionFactory
+class Table
 {
 
     private $table;
     private $query;
     private $queryValues = [];
-    private static $state;
-    private static $select;
-    private static $orderBy;
+    private $state;
+    private $select;
+    private $orderBy;
+    private $pdo;
 
     //TODO
 //    exist
@@ -21,7 +22,8 @@ class Table extends ConnectionFactory
 
 
     public function __construct( $table ){
-        parent::__construct();
+        $connect = new ConnectionFactory();
+        $this->pdo = $connect->getPdo();
         $this->table = $table;
     }
 
@@ -61,7 +63,7 @@ class Table extends ConnectionFactory
 
     public function delete($id = null){
 
-        if( self::$state == null ) {
+        if( $this->state == null ) {
             if($id) {
                 $this->queryValues[] = $id;
                 $this->query = "delete from $this->table where id = ?";
@@ -91,7 +93,7 @@ class Table extends ConnectionFactory
     public function select( $columns = ['*'] ){
 
         $columns_implode = implode(',',$columns);
-        self::$select = true;
+        $this->select = true;
         $this->query = 'select '.$columns_implode.' from '.$this->table." ".$this->query;
         return $this;
     }
@@ -138,7 +140,7 @@ class Table extends ConnectionFactory
         }
 
         $columns_implode = implode(',',$lang_columns);
-        self::$select = true;
+        $this->select = true;
         $this->query = 'select '.$columns_implode.' from '.$this->table." ".$this->query;
         return $this;
     }
@@ -170,7 +172,7 @@ class Table extends ConnectionFactory
         }
 
         $columns_implode = implode(',',$table_columns);
-        self::$select = true;
+        $this->select = true;
         $this->query = 'select '.$columns_implode.' from '.$this->table." ".$this->query;
         return $this;
     }
@@ -178,7 +180,7 @@ class Table extends ConnectionFactory
     public function distinct( $columns = ['*'] ){
 
         $columns_implode = implode(',',$columns);
-        self::$select = true;
+        $this->select = true;
         $this->query = 'select distinct '.$columns_implode.' from '.$this->table." ".$this->query;
         return $this;
     }
@@ -189,8 +191,8 @@ class Table extends ConnectionFactory
         $c = 1;
         $impArray = [];
 
-        if( self::$state == null ) {
-            self::$state = 'called';
+        if( $this->state == null ) {
+            $this->state = 'called';
             if(is_array($column))
             {
                 foreach($column as $key => $val) {
@@ -255,8 +257,8 @@ class Table extends ConnectionFactory
 
         $type = $not ? 'not between' : 'between';
 
-        if( self::$state == null ) {
-            self::$state = 'called';
+        if( $this->state == null ) {
+            $this->state = 'called';
             $this->query .= " where $column $type $bind_params";
         }
         else {
@@ -289,8 +291,8 @@ class Table extends ConnectionFactory
 
         $type = $not ? 'not in' : 'in';
 
-        if( self::$state == null ) {
-            self::$state = 'called';
+        if( $this->state == null ) {
+            $this->state = 'called';
             $this->query .= " where $column $type ($bind_params)";
         }
         else {
@@ -316,8 +318,8 @@ class Table extends ConnectionFactory
 
     public function whereColumn( $firstColumn,$secondColumn,$linker = 'and' ){
 
-        if( self::$state == null ) {
-            self::$state = 'called';
+        if( $this->state == null ) {
+            $this->state = 'called';
             $this->query .= " where $firstColumn = $secondColumn";
         }
         else {
@@ -334,8 +336,8 @@ class Table extends ConnectionFactory
     public function whereNull($column,$linker = 'and',$not = true){
 
         $type = $not ? 'not null' : 'null';
-        if( self::$state == null ) {
-            self::$state = 'called';
+        if( $this->state == null ) {
+            $this->state = 'called';
             $this->query .= " where $column $type";
         }
         else {
@@ -365,8 +367,8 @@ class Table extends ConnectionFactory
 
         $this->queryValues[] = $value;
 
-        if( self::$state == null ) {
-            self::$state = 'called';
+        if( $this->state == null ) {
+            $this->state = 'called';
             $this->query .= " where date('$column') $operator ?";
         }
         else {
@@ -384,8 +386,8 @@ class Table extends ConnectionFactory
 
         $this->queryValues[] = $value;
 
-        if( self::$state == null ) {
-            self::$state = 'called';
+        if( $this->state == null ) {
+            $this->state = 'called';
             $this->query .= " where time('$column') $operator ?";
         }
         else {
@@ -403,8 +405,8 @@ class Table extends ConnectionFactory
 
         $this->queryValues[] = $value;
 
-        if( self::$state == null ) {
-            self::$state = 'called';
+        if( $this->state == null ) {
+            $this->state = 'called';
             $this->query .= " where month('$column') $operator ?";
         }
         else {
@@ -422,8 +424,8 @@ class Table extends ConnectionFactory
 
         $this->queryValues[] = $value;
 
-        if( self::$state == null ) {
-            self::$state = 'called';
+        if( $this->state == null ) {
+            $this->state = 'called';
             $this->query .= " where year('$column') $operator ?";
         }
         else {
@@ -441,8 +443,8 @@ class Table extends ConnectionFactory
 
         $this->queryValues[] = $value;
 
-        if( self::$state == null ) {
-            self::$state = 'called';
+        if( $this->state == null ) {
+            $this->state = 'called';
             $this->query .= " where day('$column') $operator ?";
         }
         else {
@@ -468,8 +470,8 @@ class Table extends ConnectionFactory
     }
 
     public function count( $column = '*' ){
-        self::$select = 'called';
-        if( self::$state == null ) {
+        $this->select = 'called';
+        if( $this->state == null ) {
             $this->query = "select count($column)  from  $this->table";
         }
         else {
@@ -479,8 +481,8 @@ class Table extends ConnectionFactory
     }
 
     public function max( $column ){
-        self::$select = 'called';
-        if( self::$state == null ) {
+        $this->select = 'called';
+        if( $this->state == null ) {
             $this->query = "select max($column)  from  $this->table";
         }
         else {
@@ -490,8 +492,8 @@ class Table extends ConnectionFactory
     }
 
     public function min( $column ){
-        self::$select = 'called';
-        if( self::$state == null ) {
+        $this->select = 'called';
+        if( $this->state == null ) {
             $this->query = "select min($column)  from  $this->table";
         }
         else {
@@ -501,8 +503,8 @@ class Table extends ConnectionFactory
     }
 
     public function avg( $column ){
-        self::$select = 'called';
-        if( self::$state == null ) {
+        $this->select = 'called';
+        if( $this->state == null ) {
             $this->query = "select avg($column)  from  $this->table";
         }
         else {
@@ -512,8 +514,8 @@ class Table extends ConnectionFactory
     }
 
     public function sum( $column ){
-        self::$select = 'called';
-        if( self::$state == null ) {
+        $this->select = 'called';
+        if( $this->state == null ) {
             $this->query = "select sum($column)  from  $this->table";
         }
         else {
@@ -528,7 +530,7 @@ class Table extends ConnectionFactory
 	}
 
 	public function selectRaw( $CustomQuery ){
-        self::$select = true;
+        $this->select = true;
         $this->query = "select $CustomQuery from $this->table $this->query";
 		return $this;
 	}
@@ -545,11 +547,11 @@ class Table extends ConnectionFactory
     }
 
     public  function orderBy( $column , $filter = 'asc' ){
-        if( self::$orderBy == null ){
-            self::$orderBy = " order by '$column' $filter";
+        if( $this->orderBy == null ){
+            $this->orderBy = " order by $column $filter";
         }
         else{
-            self::$orderBy .= " , '$column' $filter ";
+            $this->orderBy .= " , $column $filter ";
         }
         return $this;
     }
@@ -575,9 +577,9 @@ class Table extends ConnectionFactory
         }
         else {
 
-            $this->query .= self::$orderBy;
+            $this->query .= $this->orderBy;
 
-            if( self::$select == false) {
+            if( $this->select == false) {
                 $this->query = " select * from $this->table $this->query";
             }
 
@@ -616,9 +618,9 @@ class Table extends ConnectionFactory
         }
         else {
 
-            $this->query .= self::$orderBy;
+            $this->query .= $this->orderBy;
 
-            if (self::$select == false) {
+            if ($this->orderBy == false) {
                 $this->query = " select * from $this->table $this->query";
             }
 
