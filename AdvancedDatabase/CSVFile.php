@@ -11,21 +11,26 @@ class CSVFile implements FileInterface
         $this->pdo = $pdo;
     }
 
-    public function import($filepath,$type = null)
+    public function import($filepath,$type = null,$table = null)
     {
         if($type == 'table') {
-            $handle = fopen($filepath, "r");
-            if ($handle) {
-                while (($line = fgetcsv($handle)) !== false) {
-                    try {
-                        $stmt = $this->pdo->prepare("INSERT INTO `users` (`name`, `email`) VALUES (?,?)");
-                        $stmt->execute([$line[0], $line[1]]);
-                    } catch (Exception $ex) {
-                        echo $ex->getmessage();
+
+            if($table != null) {
+                $handle = fopen($filepath, "r");
+                if ($handle) {
+                    while (($line = fgetcsv($handle)) !== false) {
+                        try {
+                            $stmt = $this->pdo->prepare("INSERT INTO `$table` (`name`, `email`) VALUES (?,?)");
+                            $stmt->execute([$line[0], $line[1]]);
+                        } catch (Exception $ex) {
+                            echo $ex->getmessage();
+                        }
                     }
+                    fclose($handle);
+                } else {
+                    echo "ERROR OPENING $filepath";
                 }
-                fclose($handle);
-            } else { echo "ERROR OPENING $filepath"; }
+            }
         }
         elseif($type == 'query')
         {

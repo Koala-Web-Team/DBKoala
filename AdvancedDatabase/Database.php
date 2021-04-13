@@ -2,11 +2,14 @@
 
 require_once("Connection/ConnectionFactory.php");
 
-class Database extends ConnectionFactory
+class Database
 {
+    private $pdo;
 
-    public function __construct(){
-        parent::__construct();
+    public function __construct( $table ){
+        $connect = new ConnectionFactory();
+        $this->pdo = $connect->getPdo();
+        $this->table = $table;
     }
 
     public function backup( $type = 'database' )

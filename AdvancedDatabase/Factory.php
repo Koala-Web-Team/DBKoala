@@ -1,11 +1,13 @@
 <?php
 
 
-abstract class Factory extends ConnectionFactory
+abstract class Factory
 {
 
+    protected $pdo;
     public function __construct(){
-        parent::__construct();
+        $connect = new ConnectionFactory();
+        $this->pdo = $connect->getPdo();
     }
 
     protected abstract function create_file (FileItem $item) : FileInterface;

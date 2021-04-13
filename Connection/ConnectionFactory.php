@@ -9,7 +9,7 @@ class ConnectionFactory
 {
 
     private $dbms;
-    protected $pdo;
+    private $pdo;
 
     public function __construct(){
         $this->dbms = $_ENV['DB_CONNECTION'];
@@ -39,6 +39,14 @@ class ConnectionFactory
 
     public function setDbms( $dbms ){
         $this->dbms = $dbms;
+    }
+
+    public function getPdo(){
+        return $this->pdo;
+    }
+
+    public function setPdo($pdo){
+        $this->pdo = $pdo;
     }
 
 }
