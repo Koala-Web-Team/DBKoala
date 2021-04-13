@@ -24,18 +24,3 @@ $csv_file->export('table');
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
