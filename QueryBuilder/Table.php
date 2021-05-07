@@ -632,6 +632,7 @@ class Table
     }
 
     public function all(){
+        $this->query = " ";
         return $this->get();
     }
 
