@@ -411,7 +411,7 @@ class Table
 		if ( $this->whereIsCalled ) {
 			$this->query .= " $linker DAY('$column') $operator ?";
 		} else {
-			$this->state = 'called';
+			$this->whereIsCalled = true;
 			$this->query .= " WHERE DAY('$column') $operator ?";
 		}
 		return $this;
