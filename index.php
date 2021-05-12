@@ -5,11 +5,13 @@ require_once("AdvancedDatabase/Database.php");
 require_once("AdvancedDatabase/FileFactory.php");
 
 
-$user = new Table('users');
+$user = new Table('packaging_companies');
 
-$result = $user->find(1);
+$result = $user->selectlang('ar',['en','ar'],['name'])->doesntExist();
 
-print_r($result);
+echo $result;
+
+
 
 
 //$file = new FileFactory();

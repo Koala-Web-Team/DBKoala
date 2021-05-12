@@ -12,6 +12,7 @@ class Table
 	private $selectIsCalled;
 	private $orderBy;
 	private $pdo;
+	private $exist;
 
 	// TODO
 	// exist
@@ -91,6 +92,7 @@ class Table
 			throw new Exception('dfdsfdf');
 		}
 
+        $this->selectIsCalled = true;
 		$sql = 'SELECT COLUMN_NAME FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA`="' . $_ENV['DB_DATABASE'] . '" AND `TABLE_NAME`="' . $this->table . '"';
 		$stmt = $this->pdo->prepare($sql);
 		$stmt->execute();
@@ -108,7 +110,7 @@ class Table
 		 */
 		if ( count( $columns ) > 0 ) {
 			foreach ( $columns as $column ) {
-				if ( ( array_search($column . '_' . $lang, $table_columns) ) !== false ) {
+				if ( ( array_search($column . '_' . $lang, $table_columns) ) != null ) {
 					$lang_columns[] =  $column . '_' . $lang;
 				} else {
 					$lang_columns[] = $column;
@@ -125,7 +127,6 @@ class Table
 		}
 
 		$columns_implode = implode(', ', $lang_columns);
-		$this->selectIsCalled = true;
 		$this->query = 'SELECT ' . $columns_implode . ' FROM ' . $this->table . " " . $this->query;
 		return $this;
 	}
@@ -134,6 +135,8 @@ class Table
 		if ( !is_array($columns) ) {
 			throw new Exception('dfdsfdf');
 		}
+
+		$this->selectIsCalled = true;
 
 		$sql = 'SELECT COLUMN_NAME FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA`="' . $_ENV['DB_DATABASE'] . '" AND `TABLE_NAME`="' . $this->table . '"';
 		$stmt = $this->pdo->prepare($sql);
@@ -150,7 +153,7 @@ class Table
 		 * TODO: TBD
 		 */
 		foreach ( $columns as $column ) {
-			if ( ($key = array_search($column, $table_columns)) !== false ) {
+			if ( ($key = array_search($column, $table_columns)) != null ) {
 				unset($table_columns[$key]);
 			}
 		}
@@ -168,9 +171,9 @@ class Table
 		return $this;
 	}
 
-	/**
-	 * TODO TBD
-	 */
+    /**
+     * TODO TBD
+     */
 	public function where( $column, $value = null, $operator = '=', $linker = 'AND' ) {
 		$this->queryValues[] = $value;
 		$impArray = [];
@@ -423,7 +426,7 @@ class Table
 	}
 
 	public function exists() {
-		return count( $this->get() ) > 0;
+        return count($this->get()) > 0;
 	}
 
 	public function doesntExist() {
@@ -511,25 +514,31 @@ class Table
 	/**
 	 * TODO TBD
 	 */
-	public function get( $format = 'array' ) {
+	public function get( $format = 'assoc' ) {
 		if ( $this->query == null ) {
 			throw new Exception('no query executed to be get');
 		} else {
 			$this->query .= $this->orderBy;
 
-			if ( $this->select == false ) {
+			if ( $this->selectIsCalled == false ) {
 				$this->query = " SELECT * FROM $this->table $this->query";
 			}
 
 			$stmt = $this->pdo->prepare($this->query);
 			$stmt->execute($this->queryValues);
-			$result = $stmt->fetchAll();
 
 			if ( $format == "json" ) {
-				$result = json_encode($result);
-			} elseif ( $format == "object" ) {
-				$result = (object)$result;
+				$result = json_encode($stmt->fetchAll());
 			}
+			elseif ( $format == "object" ) {
+				$result = $stmt->fetchAll(PDO::FETCH_OBJ);
+			}
+			elseif( $format == "both"){
+                $result = $stmt->fetchAll(PDO::FETCH_BOTH);
+            }
+			else{
+                $result = $stmt->fetchAll();
+            }
 
 			return $result;
 		}
