@@ -14,12 +14,6 @@ class Table
 	private $pdo;
 	private $exist;
 
-	// TODO
-	// exist
-	// doesnt exist
-	// absy tasks
-	// updates
-
 	public function __construct( $table ) {
 		$connect = new ConnectionFactory();
 		$this->pdo = $connect->getPdo();
@@ -27,13 +21,13 @@ class Table
 	}
 
 	public function create( $columns = [] ) {
-		$keys = implode(', ', array_keys( $columns ) );
-		$values = array_values( $columns );
+		$keys = implode(', ', array_keys($columns));
+		$values = array_values($columns);
 
 		$bind_params = "";
-		for ($i = 0; $i < count($columns); $i++) {
+		for ( $i = 0; $i < count($columns); $i++ ) {
 			$bind_params .= "?";
-			if (count($columns) - $i > 1 ) {
+			if ( count($columns) - $i > 1 ) {
 				$bind_params .= ", ";
 			}
 		}
@@ -48,10 +42,10 @@ class Table
 			return "$key = ?";
 		}, $columns));
 
-		$values = array_values( $columns );
+		$values = array_values($columns);
 
 		$sql = "UPDATE $this->table SET $keys";
-		if ($id != null) {
+		if ( $id != null ) {
 			$sql .= " WHERE id = $id";
 		}
 		$stmt = $this->pdo->prepare($sql);
@@ -84,60 +78,76 @@ class Table
 		return $this;
 	}
 
-	/**
-	 * TODO TBD
-	 */
-	public function selectlang( $lang, $languages, $columns = [] ) {
-		if ( !is_array($columns) ) {
-			throw new Exception('dfdsfdf');
+	public function selectlang( $language, array $columns = [] ) {
+		$columnsToFetch = [];
+
+		if ( is_array($language) ) {
+			foreach ( $language as $lang ) {
+				$columnsToFetch = array_merge($columnsToFetch, $this->selectOneLang($lang, $columns));
+			}
+		} else {
+			$columnsToFetch = $this->selectOneLang($language, $columns);
 		}
 
-        $this->selectIsCalled = true;
-		$sql = 'SELECT COLUMN_NAME FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA`="' . $_ENV['DB_DATABASE'] . '" AND `TABLE_NAME`="' . $this->table . '"';
-		$stmt = $this->pdo->prepare($sql);
-		$stmt->execute();
-		$result = $stmt->fetchAll();
+		$columnsToFetch = implode(', ', $columnsToFetch);
 
-		$table_columns = [];
-		$lang_columns = [];
+		$this->selectIsCalled = true;
+		$this->query = 'SELECT ' . $columnsToFetch . $this->query;
+		return $this;
+	}
 
-		foreach ( $result as  $res ) {
-			$table_columns[] = $res['COLUMN_NAME'];
-		}
+	private function selectOneLang( string $language, $columns ) {
+		$tableColumns = $this->getTableColumns();
+		$columnsToFetch = [];
 
-		/**
-		 * TODO: TBD
-		 */
-		if ( count( $columns ) > 0 ) {
+		if ( count($columns) > 0 ) {
 			foreach ( $columns as $column ) {
-				if ( ( array_search($column . '_' . $lang, $table_columns) ) != null ) {
-					$lang_columns[] =  $column . '_' . $lang;
+				if ( (array_search($column . '_' . $language, $tableColumns)) ) {
+					$columnsToFetch[] = $column . '_' . $language;
 				} else {
-					$lang_columns[] = $column;
+					$columnsToFetch[] = $column;
 				}
 			}
 		} else {
-			foreach ( $table_columns as $column ) {
-				foreach ( $languages as $lang ) {
-					if ( strpos($column, '_' . $lang) == true || strpos($column, '_' . $lang) == false ) {
-						$lang_columns[] = $column;
+			$columnsWithLang = [];
+			foreach ( $tableColumns as $column ) {
+				$columnsToFetch[] = $column;
+				if ( strpos($column, '_' . $language) ) {
+					$columnsWithLang[] = str_replace("_" . $language, "", $column);
+				}
+			}
+			foreach ( $columnsToFetch as $column ) {
+				foreach ( $columnsWithLang as $columnWithLang ) {
+					if ( strpos($column, $columnWithLang . "_") && !strpos($column, $columnWithLang . "_" . $language) ) {
+						$key = array_search($column, $columnsToFetch);
+						unset($columnsToFetch[$key]);
+						break;
 					}
 				}
 			}
 		}
+		return $columnsToFetch;
+	}
 
-		$columns_implode = implode(', ', $lang_columns);
+	public function selectExcept( array $columns ) {
+		$tableColumns = $this->getTableColumns();
+
+		/**
+		 * TODO: TBD
+		 */
+		foreach ( $columns as $column ) {
+			if ( ($key = array_search($column, $tableColumns)) != null ) {
+				unset($tableColumns[$key]);
+			}
+		}
+
+		$columns_implode = implode(', ', $tableColumns);
+		$this->selectIsCalled = true;
 		$this->query = 'SELECT ' . $columns_implode . ' FROM ' . $this->table . " " . $this->query;
 		return $this;
 	}
 
-	public function selectExcept( $columns ) {
-		if ( !is_array($columns) ) {
-			throw new Exception('dfdsfdf');
-		}
-
-		$this->selectIsCalled = true;
-
+	private function getTableColumns() {
 		$sql = 'SELECT COLUMN_NAME FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA`="' . $_ENV['DB_DATABASE'] . '" AND `TABLE_NAME`="' . $this->table . '"';
 		$stmt = $this->pdo->prepare($sql);
 		$stmt->execute();
@@ -149,19 +159,7 @@ class Table
 			$table_columns[] = $res['COLUMN_NAME'];
 		}
 
-		/**
-		 * TODO: TBD
-		 */
-		foreach ( $columns as $column ) {
-			if ( ($key = array_search($column, $table_columns)) != null ) {
-				unset($table_columns[$key]);
-			}
-		}
-
-		$columns_implode = implode(', ', $table_columns);
-		$this->selectIsCalled = true;
-		$this->query = 'SELECT ' . $columns_implode . ' FROM ' . $this->table . " " . $this->query;
-		return $this;
+		return $table_columns;
 	}
 
 	public function distinct( $columns = ['*'] ) {
@@ -171,55 +169,31 @@ class Table
 		return $this;
 	}
 
-    /**
-     * TODO TBD
-     */
 	public function where( $column, $value = null, $operator = '=', $linker = 'AND' ) {
-		$this->queryValues[] = $value;
-		$impArray = [];
-
-		/**
-		 * TODO: TBD
-		 */
-		if ( !$this->whereIsCalled ) {
+		if ( $this->whereIsCalled ) {
+			$this->query .= $linker . " ";
+		} else {
 			$this->whereIsCalled = true;
-			if ( is_array($column) ) {
-				foreach ( $column as $i => $val ) {
-					$first = $val[0];
-					$second = $val[1];
-					$last = $val[2];
+			$this->query .= " WHERE " . " ";
+		}
 
-					if ( count($column) != ($i + 1) ) {
-						$linker = 'AND ';
-					} else {
-						$linker = ' ';
-					}
-					$this->queryValues[] = $last;
-					array_push($impArray, ...array($first, $second, '?', $linker));
+		if ( is_array($column) ) {
+			foreach ( $column as $i => $val ) {
+				$columnName = $val[0];
+				$columnsOperator = $val[1];
+				$columnValue = $val[2];
+
+				if ( count($column) != ($i + 1) ) {
+					$linker = 'AND ';
+				} else {
+					$linker = '';
 				}
-				$this->query .= "WHERE " . implode(' ', $impArray);
-			} else {
-				$this->query .= " WHERE $column $operator ?";
+				$this->queryValues[] = $columnValue;
+				$this->query .= " $columnName $columnsOperator ? $linker";
 			}
 		} else {
-			if ( is_array($column) ) {
-				foreach ( $column as $i => $val ) {
-					$first = $val[0];
-					$second = $val[1];
-					$last = $val[2];
-
-					if ( count($column) != ($i + 1) ) {
-						$linker = 'AND ';
-					} else {
-						$linker = ' ';
-					}
-					$this->queryValues[] = $last;
-					array_push($impArray, ...array($first, $second, '?', $linker));
-				}
-				$this->query .= " AND " . implode(' ', $impArray);
-			} else {
-				$this->query .= " $linker $column $operator ?";
-			}
+			$this->queryValues[] = $value;
+			$this->query .= " $column $operator ?";
 		}
 		return $this;
 	}
@@ -233,9 +207,9 @@ class Table
 		array_push($this->queryValues, ...$values);
 
 		$bind_params = "";
-		for ($i = 0; $i < count($values); $i++) {
+		for ( $i = 0; $i < count($values); $i++ ) {
 			$bind_params .= "?";
-			if (count($values) - $i > 1 ) {
+			if ( count($values) - $i > 1 ) {
 				$bind_params .= " AND ";
 			}
 		}
@@ -426,7 +400,7 @@ class Table
 	}
 
 	public function exists() {
-        return count($this->get()) > 0;
+		return count($this->get()) > 0;
 	}
 
 	public function doesntExist() {
@@ -457,10 +431,9 @@ class Table
 
 	public function sum( $column ) {
 		return $this->SQLFunction("SUM", $column);
-
 	}
 
-	private function SQLFunction($function, $column) {
+	private function SQLFunction( $function, $column ) {
 		$this->select = 'called';
 		if ( $this->whereIsCalled ) {
 			$this->query = "SELECT $function($column) FROM $this->table $this->query";
@@ -529,16 +502,13 @@ class Table
 
 			if ( $format == "json" ) {
 				$result = json_encode($stmt->fetchAll());
-			}
-			elseif ( $format == "object" ) {
+			} elseif ( $format == "object" ) {
 				$result = $stmt->fetchAll(PDO::FETCH_OBJ);
+			} elseif ( $format == "both" ) {
+				$result = $stmt->fetchAll(PDO::FETCH_BOTH);
+			} else {
+				$result = $stmt->fetchAll();
 			}
-			elseif( $format == "both"){
-                $result = $stmt->fetchAll(PDO::FETCH_BOTH);
-            }
-			else{
-                $result = $stmt->fetchAll();
-            }
 
 			return $result;
 		}
