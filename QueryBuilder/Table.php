@@ -198,7 +198,7 @@ class Table
 			$this->where .= $linker . " ";
 		} else {
 			$this->whereIsCalled = true;
-			$this->where .= " WHERE " . " ";
+			$this->where = " WHERE " . " ";
 		}
 
 		if ( is_array($column) ) {
@@ -244,7 +244,7 @@ class Table
 			$this->where .= " $linker $column $type $bind_params";
 		} else {
 			$this->whereIsCalled = true;
-			$this->where .= " WHERE $column $type $bind_params";
+			$this->where = " WHERE $column $type $bind_params";
 		}
 		return $this;
 	}
@@ -277,7 +277,7 @@ class Table
 			$this->where .= " $linker $column $type ($bind_params)";
 		} else {
 			$this->whereIsCalled = true;
-			$this->where .= " WHERE $column $type ($bind_params)";
+			$this->where = " WHERE $column $type ($bind_params)";
 		}
 		return $this;
 	}
@@ -302,7 +302,7 @@ class Table
 			$this->where .= " $linker $firstColumn = $secondColumn";
 		} else {
 			$this->whereIsCalled = true;
-			$this->where .= " WHERE $firstColumn = $secondColumn";
+			$this->where = " WHERE $firstColumn = $secondColumn";
 		}
 		return $this;
 	}
@@ -318,7 +318,7 @@ class Table
 			$this->where .= " $linker $column $type";
 		} else {
 			$this->whereIsCalled = true;
-			$this->where .= " WHERE $column $type";
+			$this->where = " WHERE $column $type";
 		}
 		return $this;
 	}
@@ -345,7 +345,7 @@ class Table
 			$this->where .= " $linker DATE('$column') $operator ?";
 		} else {
 			$this->whereIsCalled = true;
-			$this->where .= " WHERE DATE('$column') $operator ?";
+			$this->where = " WHERE DATE('$column') $operator ?";
 		}
 		return $this;
 	}
@@ -362,7 +362,7 @@ class Table
 			$this->where .= " $linker TIME('$column') $operator ?";
 		} else {
 			$this->whereIsCalled = true;
-			$this->where .= " WHERE TIME('$column') $operator ?";
+			$this->where = " WHERE TIME('$column') $operator ?";
 		}
 		return $this;
 	}
@@ -379,7 +379,7 @@ class Table
 			$this->where .= " $linker MONTH('$column') $operator ?";
 		} else {
 			$this->whereIsCalled = true;
-			$this->where .= " WHERE MONTH('$column') $operator ?";
+			$this->where = " WHERE MONTH('$column') $operator ?";
 		}
 		return $this;
 	}
@@ -396,7 +396,7 @@ class Table
 			$this->where .= " $linker YEAR('$column') $operator ?";
 		} else {
 			$this->whereIsCalled = true;
-			$this->where .= " WHERE YEAR('$column') $operator ?";
+			$this->where = " WHERE YEAR('$column') $operator ?";
 		}
 		return $this;
 	}
@@ -413,7 +413,7 @@ class Table
 			$this->where .= " $linker DAY('$column') $operator ?";
 		} else {
 			$this->whereIsCalled = true;
-			$this->where .= " WHERE DAY('$column') $operator ?";
+			$this->where = " WHERE DAY('$column') $operator ?";
 		}
 		return $this;
 	}
@@ -422,6 +422,61 @@ class Table
 		$this->whereDay($column, $value, $operator, 'OR');
 		return $this;
 	}
+
+	public function whereExists( $condition , $linker = 'AND' , $not = false){
+        $type = $not ? 'NOT EXISTS' : 'EXISTS';
+        if ( $this->whereIsCalled ) {
+            $this->where .= " $linker $type($condition)";
+        } else {
+            $this->whereIsCalled = true;
+            $this->where = " WHERE $type($condition)";
+        }
+        return $this;
+    }
+
+    public function whereNotExists( $condition , $linker = 'AND'){
+        $this->whereExists($condition , $linker , true);
+        return $this;
+    }
+
+    public function orWhereExists( $condition ){
+        $this->whereExists($condition ,'OR');
+        return $this;
+    }
+
+    public function orWhereNotExists( $condition ){
+        $this->whereExists($condition , 'OR' , true);
+        return $this;
+    }
+
+    public function whereSub($subquery , $operator = '=' , $value = null ,$column = null , $linker = 'AND'){
+
+        if ( $this->whereIsCalled ) {
+            $this->where .= $linker . " ";
+        } else {
+            $this->whereIsCalled = true;
+            $this->where = " WHERE " . " ";
+        }
+
+        if( $column == null ) {
+            $this->queryValues[] = $value;
+            $this->where .= "($subquery) $operator ?";
+        }
+        else{
+            $this->where = "($subquery) $operator $column";
+        }
+        return $this;
+    }
+
+    public function whereGroup( $wheres , $linker = 'AND' ){
+        if ( $this->whereIsCalled ) {
+            $this->where .= " $linker ($wheres)";
+        } else {
+            $this->whereIsCalled = true;
+            $this->where = " WHERE ($wheres)";
+        }
+        return $this;
+    }
 
     public function having( $column, $value = null, $operator = '=', $linker = 'and' ) {
         if ( $this->havingIsCalled ) {
@@ -667,10 +722,25 @@ class Table
 
 	    if(is_array($columns)) {
             $columns_implode = implode(',', $columns);
-            $this->groupby = " GROUP BY " . $columns_implode;
+            if($this->groupby == null){
+                $this->groupby = " GROUP BY " . $columns_implode;
+            }
+            else{
+                $this->groupby .= " , $columns_implode ";
+            }
         }
 	    else{
             $this->groupby = " GROUP BY " . $columns;
+        }
+        return $this;
+    }
+
+    public function groupByRaw( $sql ) {
+        if( $this->groupby == null ) {
+            $this->groupby = " GROUP BY " . $sql;
+        }
+        else{
+            $this->groupby .= ", $sql ";
         }
         return $this;
     }

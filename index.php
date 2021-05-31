@@ -7,20 +7,11 @@ require_once("AdvancedDatabase/FileFactory.php");
 
 
 $users = new Table('users');
-
-$count = 1;
-
-$result = $users->chunk(2, function ($result) use ($count){
-    echo "<pre>";
-    var_dump($result);
-    $count++;
-    echo "</pre>";
-});
+$orders = new Table('orders');
 
 
-echo $count;
 
-
+print_r($result);
 
 
 
