@@ -22,28 +22,4 @@ class FileFactory extends Factory {
                 break;
         }
     }
-
-    public function renderdata($result,$type = null)
-    {
-        if($type == 'array')
-        {
-            echo 'render array' . ' '.$result;
-        }
-        else
-        {
-            echo 'render json' . ' '.$result;
-        }
-    }
-
-    public function rfg($result,$type = null)
-    {
-        if($type == 'array')
-        {
-            echo 'render array' . ' '.$result;
-        }
-        else
-        {
-            echo 'render json' . ' '.$result;
-        }
-    }
 }

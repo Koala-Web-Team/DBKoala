@@ -8,11 +8,19 @@ class Table
 	private $query;
 	private $queryValues = [];
 	private $whereIsCalled;
+    private $havingIsCalled;
 	private $select;
+	private $join;
 	private $selectIsCalled;
 	private $orderBy;
+	private $take;
+	private $from;
+	private $groupby;
+	private $offset;
+	private $union;
 	private $pdo;
-	private $exist;
+	private $where;
+	private $having;
 
 	public function __construct( $table ) {
 		$connect = new ConnectionFactory();
@@ -74,7 +82,12 @@ class Table
 	public function select( $columns = ['*'] ) {
 		$columns_implode = implode(',', $columns);
 		$this->selectIsCalled = true;
-		$this->query = 'SELECT ' . $columns_implode . ' FROM ' . $this->table . " " . $this->query;
+		if($this->from != null) {
+            $this->select = 'SELECT ' . $columns_implode . $this->from;
+        }
+		else{
+            $this->select = 'SELECT ' . $columns_implode . ' FROM ' . $this->table;
+        }
 		return $this;
 	}
 
@@ -92,7 +105,12 @@ class Table
 		$columnsToFetch = implode(', ', $columnsToFetch);
 
 		$this->selectIsCalled = true;
-		$this->query = 'SELECT ' . $columnsToFetch . $this->query;
+        if($this->from != null) {
+            $this->select = 'SELECT ' . $columnsToFetch . $this->from;
+        }
+        else{
+            $this->select = 'SELECT ' . $columnsToFetch . ' FROM ' . $this->table;
+        }
 		return $this;
 	}
 
@@ -143,7 +161,12 @@ class Table
 
 		$columns_implode = implode(', ', $tableColumns);
 		$this->selectIsCalled = true;
-		$this->query = 'SELECT ' . $columns_implode . ' FROM ' . $this->table . " " . $this->query;
+        if($this->from != null) {
+            $this->select = 'SELECT ' . $columns_implode . $this->from;
+        }
+        else{
+            $this->select = 'SELECT ' . $columns_implode . ' FROM ' . $this->table;
+        }
 		return $this;
 	}
 
@@ -165,16 +188,17 @@ class Table
 	public function distinct( $columns = ['*'] ) {
 		$columns_implode = implode(',', $columns);
 		$this->selectIsCalled = true;
-		$this->query = 'SELECT DISTINCT ' . $columns_implode . ' FROM ' . $this->table . " " . $this->query;
+        $this->select = 'SELECT DISTINCT ' . $columns_implode . ' FROM ' . $this->table;
+		$this->query = $this->select . " " . $this->query;
 		return $this;
 	}
 
 	public function where( $column, $value = null, $operator = '=', $linker = 'AND' ) {
 		if ( $this->whereIsCalled ) {
-			$this->query .= $linker . " ";
+			$this->where .= $linker . " ";
 		} else {
 			$this->whereIsCalled = true;
-			$this->query .= " WHERE " . " ";
+			$this->where .= " WHERE " . " ";
 		}
 
 		if ( is_array($column) ) {
@@ -189,11 +213,11 @@ class Table
 					$linker = '';
 				}
 				$this->queryValues[] = $columnValue;
-				$this->query .= " $columnName $columnsOperator ? $linker";
+				$this->where .= " $columnName $columnsOperator ? $linker";
 			}
 		} else {
 			$this->queryValues[] = $value;
-			$this->query .= " $column $operator ?";
+			$this->where .= " $column $operator ?";
 		}
 		return $this;
 	}
@@ -217,10 +241,10 @@ class Table
 		$type = $not ? 'NOT BETWEEN' : 'BETWEEN';
 
 		if ( $this->whereIsCalled ) {
-			$this->query .= " $linker $column $type $bind_params";
+			$this->where .= " $linker $column $type $bind_params";
 		} else {
 			$this->whereIsCalled = true;
-			$this->query .= " WHERE $column $type $bind_params";
+			$this->where .= " WHERE $column $type $bind_params";
 		}
 		return $this;
 	}
@@ -250,10 +274,10 @@ class Table
 		$type = $not ? 'NOT IN' : 'IN';
 
 		if ( $this->whereIsCalled ) {
-			$this->query .= " $linker $column $type ($bind_params)";
+			$this->where .= " $linker $column $type ($bind_params)";
 		} else {
 			$this->whereIsCalled = true;
-			$this->query .= " WHERE $column $type ($bind_params)";
+			$this->where .= " WHERE $column $type ($bind_params)";
 		}
 		return $this;
 	}
@@ -275,10 +299,10 @@ class Table
 
 	public function whereColumn( $firstColumn, $secondColumn, $linker = 'AND' ) {
 		if ( $this->whereIsCalled ) {
-			$this->query .= " $linker $firstColumn = $secondColumn";
+			$this->where .= " $linker $firstColumn = $secondColumn";
 		} else {
 			$this->whereIsCalled = true;
-			$this->query .= " WHERE $firstColumn = $secondColumn";
+			$this->where .= " WHERE $firstColumn = $secondColumn";
 		}
 		return $this;
 	}
@@ -291,10 +315,10 @@ class Table
 	public function whereNull( $column, $linker = 'AND', $not = false ) {
 		$type = $not ? 'NOT NULL' : 'NULL';
 		if ( $this->whereIsCalled ) {
-			$this->query .= " $linker $column $type";
+			$this->where .= " $linker $column $type";
 		} else {
 			$this->whereIsCalled = true;
-			$this->query .= " WHERE $column $type";
+			$this->where .= " WHERE $column $type";
 		}
 		return $this;
 	}
@@ -318,10 +342,10 @@ class Table
 		$this->queryValues[] = $value;
 
 		if ( $this->whereIsCalled ) {
-			$this->query .= " $linker DATE('$column') $operator ?";
+			$this->where .= " $linker DATE('$column') $operator ?";
 		} else {
 			$this->whereIsCalled = true;
-			$this->query .= " WHERE DATE('$column') $operator ?";
+			$this->where .= " WHERE DATE('$column') $operator ?";
 		}
 		return $this;
 	}
@@ -335,10 +359,10 @@ class Table
 		$this->queryValues[] = $value;
 
 		if ( $this->whereIsCalled ) {
-			$this->query .= " $linker TIME('$column') $operator ?";
+			$this->where .= " $linker TIME('$column') $operator ?";
 		} else {
 			$this->whereIsCalled = true;
-			$this->query .= " WHERE TIME('$column') $operator ?";
+			$this->where .= " WHERE TIME('$column') $operator ?";
 		}
 		return $this;
 	}
@@ -352,10 +376,10 @@ class Table
 		$this->queryValues[] = $value;
 
 		if ( $this->whereIsCalled ) {
-			$this->query .= " $linker MONTH('$column') $operator ?";
+			$this->where .= " $linker MONTH('$column') $operator ?";
 		} else {
 			$this->whereIsCalled = true;
-			$this->query .= " WHERE MONTH('$column') $operator ?";
+			$this->where .= " WHERE MONTH('$column') $operator ?";
 		}
 		return $this;
 	}
@@ -369,10 +393,10 @@ class Table
 		$this->queryValues[] = $value;
 
 		if ( $this->whereIsCalled ) {
-			$this->query .= " $linker YEAR('$column') $operator ?";
+			$this->where .= " $linker YEAR('$column') $operator ?";
 		} else {
 			$this->whereIsCalled = true;
-			$this->query .= " WHERE YEAR('$column') $operator ?";
+			$this->where .= " WHERE YEAR('$column') $operator ?";
 		}
 		return $this;
 	}
@@ -386,10 +410,10 @@ class Table
 		$this->queryValues[] = $value;
 
 		if ( $this->whereIsCalled ) {
-			$this->query .= " $linker DAY('$column') $operator ?";
+			$this->where .= " $linker DAY('$column') $operator ?";
 		} else {
 			$this->whereIsCalled = true;
-			$this->query .= " WHERE DAY('$column') $operator ?";
+			$this->where .= " WHERE DAY('$column') $operator ?";
 		}
 		return $this;
 	}
@@ -398,6 +422,47 @@ class Table
 		$this->whereDay($column, $value, $operator, 'OR');
 		return $this;
 	}
+
+    public function having( $column, $value = null, $operator = '=', $linker = 'and' ) {
+        if ( $this->havingIsCalled ) {
+            $this->having .= " ".$linker . " ";
+        } else {
+            $this->havingIsCalled = true;
+            $this->having .= " HAVING " . " ";
+        }
+
+        $this->queryValues[] = $value;
+        $this->having .= " $column $operator ?";
+
+        return $this;
+    }
+
+    public function orHaving( $column, $value, $operator = '=' ) {
+        $this->having($column, $value, $operator, 'OR');
+        return $this;
+    }
+
+    public function havingBetween( $column, $values = [], $linker = 'AND', $not = false ) {
+        array_push($this->queryValues, ...$values);
+
+        $bind_params = "";
+        for ( $i = 0; $i < count($values); $i++ ) {
+            $bind_params .= "?";
+            if ( count($values) - $i > 1 ) {
+                $bind_params .= " AND ";
+            }
+        }
+
+        $type = $not ? 'NOT BETWEEN' : 'BETWEEN';
+
+        if ( $this->havingIsCalled ) {
+            $this->having .= " $linker $column $type $bind_params";
+        } else {
+            $this->havingIsCalled = true;
+            $this->having .= " HAVING $column $type $bind_params";
+        }
+        return $this;
+    }
 
 	public function exists() {
 		return count($this->get()) > 0;
@@ -443,27 +508,66 @@ class Table
 		return $this->aggregate();
 	}
 
-	public function raw( $CustomQuery ) {
-		$this->query = $CustomQuery;
+	public function raw( $query ) {
+		$this->query = $query;
 		return $this;
 	}
 
-	public function selectRaw( $CustomQuery ) {
-		$this->select = true;
-		$this->query = "SELECT $CustomQuery FROM $this->table $this->query";
+	public function selectRaw( $query ) {
+		$this->selectIsCalled = true;
+		$this->select = "SELECT $query FROM $this->table $this->query";
 		return $this;
 	}
 
-	public function from( $table, $as ) {
-		if ( $as ) {
-			$this->query .= " FROM $table AS $as";
+    public function whereRaw( $sql , $linker = 'AND' ) {
+        if ( $this->whereIsCalled ) {
+            $this->where .= $linker . " " . $sql;
+        } else {
+            $this->whereIsCalled = true;
+            $this->where .= " WHERE " . " " . $sql;
+        }
+        return $this;
+    }
+
+    public function orWhereRaw( $sql ) {
+        $this->whereRaw($sql , 'OR');
+        return $this;
+    }
+
+    public function havingRaw( $sql , $linker = "AND") {
+        if ( $this->havingIsCalled ) {
+            $this->having .= $linker . " " . $sql;
+        } else {
+            $this->havingIsCalled = true;
+            $this->having .= " HAVING " . " " . $sql;
+        }
+        return $this;
+    }
+
+    public function orHavingRaw( $sql ) {
+	    $this->havingRaw($sql , 'OR');
+        return $this;
+    }
+
+    public function orderByRaw( $sql ) {
+        if ( $this->orderBy == null ) {
+            $this->orderBy = " ORDER BY $sql";
+        } else {
+            $this->orderBy .= " , $sql ";
+        }
+        return $this;
+    }
+
+	public function from( $table, $as = null ) {
+		if ( $as != null ) {
+			$this->from = " FROM $table AS $as";
 		} else {
-			$this->query .= " FROM $table";
+			$this->from = " FROM $table";
 		}
 		return $this;
 	}
 
-	public function orderBy( $column, $filter = 'ASC' ) {
+	public function orderBy( $column , $filter = "ASC" ) {
 		if ( $this->orderBy == null ) {
 			$this->orderBy = " ORDER BY $column $filter";
 		} else {
@@ -484,35 +588,120 @@ class Table
 		return $this->where('id', $id)->first();
 	}
 
+    public function limit( $value ) {
+        $this->take = "LIMIT $value";
+        return $this;
+    }
+
+    public function take( $value ) {
+        $this->limit($value);
+        return $this;
+    }
+
+    public function offset( $value ) {
+        $this->offset = "OFFSET $value";
+        return $this;
+    }
+
+    public function skip( $value ) {
+        $this->offset($value);
+        return $this;
+    }
+
+    public function union( $query , $all = null) {
+        $this->union = " UNION$all ($query)";
+        return $this;
+    }
+
+    public function unionall( $query ) {
+        $this->union($query,'All');
+        return $this;
+    }
+
+    public function join( $table , $first , $second , $operator = "=" , $type = "INNER" ) {
+	    $this->join = " $type JOIN $table ON $first $operator $second";
+        return $this;
+    }
+
+    public function crossjoin( $table , $first , $second , $operator = "=" ) {
+        $this->join($table , $first , $second , $operator , "CROSS");
+        return $this;
+    }
+
+    public function innerjoin( $table , $first , $second , $operator = "=" ) {
+        $this->join($table , $first , $second , $operator , "INNER");
+        return $this;
+    }
+
+    public function leftjoin( $table , $first , $second , $operator = "=" ) {
+        $this->join($table , $first , $second , $operator , "LEFT");
+        return $this;
+    }
+
+    public function rightjoin( $table , $first , $second , $operator = "=" ) {
+        $this->join($table , $first , $second , $operator , "RIGHT");
+        return $this;
+    }
+
+    public function chunk( $number, callable $callback) {
+        $iteration = 1;
+        do {
+            $tempQuery = $this->query;
+            $this->query .= " LIMIT " . ($iteration * $number) . ", " . $number;
+            $result = $this->get();
+
+            if ( empty($result) ) {
+                break;
+            }
+
+            call_user_func($callback, $result);
+            $this->query = $tempQuery;
+            $iteration++;
+
+            print_r($this->query);
+            die();
+        } while ( true );
+    }
+
+    public function groupBy( $columns ) {
+
+	    if(is_array($columns)) {
+            $columns_implode = implode(',', $columns);
+            $this->groupby = " GROUP BY " . $columns_implode;
+        }
+	    else{
+            $this->groupby = " GROUP BY " . $columns;
+        }
+        return $this;
+    }
+
 	/**
 	 * TODO TBD
 	 */
 	public function get( $format = 'assoc' ) {
-		if ( $this->query == null ) {
-			throw new Exception('no query executed to be get');
-		} else {
-			$this->query .= $this->orderBy;
 
-			if ( $this->selectIsCalled == false ) {
-				$this->query = " SELECT * FROM $this->table $this->query";
-			}
+        $this->buildQuery();
 
-			$stmt = $this->pdo->prepare($this->query);
-			$stmt->execute($this->queryValues);
+        $stmt = $this->pdo->prepare($this->query);
+        $stmt->execute($this->queryValues);
 
-			if ( $format == "json" ) {
-				$result = json_encode($stmt->fetchAll());
-			} elseif ( $format == "object" ) {
-				$result = $stmt->fetchAll(PDO::FETCH_OBJ);
-			} elseif ( $format == "both" ) {
-				$result = $stmt->fetchAll(PDO::FETCH_BOTH);
-			} else {
-				$result = $stmt->fetchAll();
-			}
+        if ( $format == "json" ) {
+            $result = json_encode($stmt->fetchAll());
+        } elseif ( $format == "object" ) {
+            $result = $stmt->fetchAll(PDO::FETCH_OBJ);
+        } elseif ( $format == "both" ) {
+            $result = $stmt->fetchAll(PDO::FETCH_BOTH);
+        } else {
+            $result = $stmt->fetchAll();
+        }
 
-			return $result;
-		}
+        return $result;
 	}
+
+    public function koalaSql( $format = 'assoc' ) {
+        $this->buildQuery();
+        return $this->query;
+    }
 
 	private function aggregate() {
 		if ( $this->query == null ) {
@@ -526,24 +715,16 @@ class Table
 	}
 
 	public function first() {
-		if ( $this->query == null ) {
-			throw new Exception('no query executed to be get');
-		} else {
-			$this->query .= $this->orderBy;
 
-			if ( $this->orderBy == false ) {
-				$this->query = " SELECT * FROM $this->table $this->query";
-			}
+        $this->buildQuery();
 
-			$stmt = $this->pdo->prepare($this->query);
-			$stmt->execute($this->queryValues);
-			$result = $stmt->fetch(PDO::FETCH_OBJ);
-			return $result;
-		}
+        $stmt = $this->pdo->prepare($this->query);
+        $stmt->execute($this->queryValues);
+        $result = $stmt->fetch(PDO::FETCH_OBJ);
+        return $result;
 	}
 
 	public function all() {
-		$this->query = " ";
 		return $this->get();
 	}
 
@@ -562,4 +743,30 @@ class Table
 	public function setTable( $table ) {
 		$this->table = $table;
 	}
+
+	private function buildQuery(){
+        $this->query = $this->where." ".$this->groupby." ".$this->having;
+
+        if ( $this->selectIsCalled == false ) {
+            if( $this->from != null ){
+                $this->select = "SELECT * $this->from";
+            }
+            else {
+                $this->select = "SELECT * FROM $this->table";
+            }
+        }
+
+        if( $this->join != null ) {
+            $this->query = " $this->select $this->join $this->query";
+        }
+        else{
+            $this->query = " $this->select $this->query";
+        }
+
+        $this->query .= $this->orderBy." ".$this->take." ".$this->offset;
+
+        if( $this->union != null ){
+            $this->query = "(".$this->query.")".$this->union;
+        }
+    }
 }

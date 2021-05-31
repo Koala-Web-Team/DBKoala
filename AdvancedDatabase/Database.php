@@ -6,10 +6,9 @@ class Database
 {
     private $pdo;
 
-    public function __construct( $table ){
+    public function __construct(){
         $connect = new ConnectionFactory();
         $this->pdo = $connect->getPdo();
-        $this->table = $table;
     }
 
     public function backup( $type = 'database' )

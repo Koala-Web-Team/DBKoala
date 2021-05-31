@@ -11,16 +11,15 @@ class CSVFile implements FileInterface
         $this->pdo = $pdo;
     }
 
-    public function import($filepath,$type = null,$table = null)
+    public function import( $filepath, $type = null, $value = null )
     {
         if($type == 'table') {
-
-            if($table != null) {
+            if($value != null) {
                 $handle = fopen($filepath, "r");
                 if ($handle) {
                     while (($line = fgetcsv($handle)) !== false) {
                         try {
-                            $stmt = $this->pdo->prepare("INSERT INTO `$table` (`name`, `email`) VALUES (?,?)");
+                            $stmt = $this->pdo->prepare("INSERT INTO `$value` (`name`, `email`) VALUES (?,?)");
                             $stmt->execute([$line[0], $line[1]]);
                         } catch (Exception $ex) {
                             echo $ex->getmessage();
@@ -43,29 +42,67 @@ class CSVFile implements FileInterface
 
     }
 
-    public function export($type = null)
+    public function export( $type = null , $value = null )
     {
 
-        if($type == 'table') {
+        if($value == null) {
+           throw new \http\Exception\InvalidArgumentException('dfsf');
+        }
+
+        if( $type == 'table' ) {
             header('Content-Type: application/octet-stream');
             header("Content-Transfer-Encoding: Binary");
             header("Content-disposition: attachment; filename=\"export.csv\"");
 
-            $stmt = $this->pdo->prepare("SELECT * FROM `users`");
+            $stmt = $this->pdo->prepare("SELECT * FROM $value");
             $stmt->execute();
+            $fp = fopen('php://output', 'w');
             while ($row = $stmt->fetch(PDO::FETCH_NAMED)) {
-                echo implode(",", [$row['name'], $row['email'], $row['phone']]);
-                echo "\r\n";
+                fputcsv($fp,$row);
             }
+            fclose($fp);
         }
-        elseif($type == 'query')
-        {
-            echo 'export query pdf';
+        elseif( $type == 'query' ) {
+            header('Content-Type: application/octet-stream');
+            header("Content-Transfer-Encoding: Binary");
+            header("Content-disposition: attachment; filename=\"export.csv\"");
+
+            $stmt = $this->pdo->prepare($value);
+            $stmt->execute();
+
+            $fp = fopen('php://output', 'w');
+
+            while ($row = $stmt->fetch(PDO::FETCH_NAMED)) {
+                fputcsv($fp,$row);
+            }
+            fclose($fp);
         }
-        else
-        {
-            echo 'export database pdf';
+        else {
+            throw new \http\Exception\InvalidArgumentException('dfdfsf');
         }
+//        else
+//        {
+//            $query = $this->pdo->prepare('show tables');
+//            $query->execute();
+//
+//            while($rows = $query->fetch(PDO::FETCH_ASSOC)){
+//                header('Content-Type: application/octet-stream');
+//                header("Content-Transfer-Encoding: Binary");
+//                header("Content-disposition: attachment; filename=\"export.csv\"");
+//
+//                $table = $rows['Tables_in_buisness'];
+//
+//                $fp = fopen('php://output', 'w');
+//
+//                $stmt = $this->pdo->prepare("SELECT * FROM $table");
+//                $stmt->execute();
+//                while ($row = $stmt->fetch(PDO::FETCH_NAMED)) {
+//                    fputcsv($fp,$row);
+//                }
+//
+//                fclose($fp);
+//            }
+//        }
 
     }
 }

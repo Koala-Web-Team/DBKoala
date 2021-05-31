@@ -11,5 +11,4 @@ abstract class Factory
     }
 
     protected abstract function create_file (FileItem $item) : FileInterface;
-    protected abstract function renderdata ($type,$result);
 }

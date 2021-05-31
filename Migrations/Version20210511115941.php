@@ -241,5 +241,9 @@ final class Version20210511115941 extends AbstractMigration
         $this->addSql('CREATE INDEX posts_group_id_foreign ON posts (group_id)');
         $this->addSql('CREATE INDEX posts_posttypeid_foreign ON posts (postTypeId)');
         $this->addSql('CREATE INDEX posts_publisherid_foreign ON posts (publisherId)');
+        $this->addSql('CREATE PROCEDURE `get_posts_by_userid` (IN idx int)
+            BEGIN
+            SELECT * FROM posts WHERE user_id = idx;
+            END');
     }
 }

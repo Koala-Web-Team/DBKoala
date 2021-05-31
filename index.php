@@ -5,22 +5,20 @@ require_once("AdvancedDatabase/Database.php");
 require_once("AdvancedDatabase/FileFactory.php");
 
 
-$user = new Table('packaging_companies');
 
-$result = $user->selectlang('ar',['en','ar'],['name'])->doesntExist();
+$users = new Table('users');
 
-echo $result;
+$count = 1;
 
-
-
-
-//$file = new FileFactory();
-//
-//$csv_file = $file->create_file(new FileItem('csv'));
-//
-//$csv_file->export('table');
+$result = $users->chunk(2, function ($result) use ($count){
+    echo "<pre>";
+    var_dump($result);
+    $count++;
+    echo "</pre>";
+});
 
 
+echo $count;
 
 
 
