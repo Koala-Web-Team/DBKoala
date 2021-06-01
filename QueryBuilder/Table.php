@@ -15,6 +15,7 @@ class Table
 	private $orderBy;
 	private $take;
 	private $from;
+	private $wheregroup;
 	private $groupby;
 	private $offset;
 	private $union;
@@ -82,12 +83,7 @@ class Table
 	public function select( $columns = ['*'] ) {
 		$columns_implode = implode(',', $columns);
 		$this->selectIsCalled = true;
-		if($this->from != null) {
-            $this->select = 'SELECT ' . $columns_implode . $this->from;
-        }
-		else{
-            $this->select = 'SELECT ' . $columns_implode . ' FROM ' . $this->table;
-        }
+		$this->select = 'SELECT ' . $columns_implode;
 		return $this;
 	}
 
@@ -105,12 +101,7 @@ class Table
 		$columnsToFetch = implode(', ', $columnsToFetch);
 
 		$this->selectIsCalled = true;
-        if($this->from != null) {
-            $this->select = 'SELECT ' . $columnsToFetch . $this->from;
-        }
-        else{
-            $this->select = 'SELECT ' . $columnsToFetch . ' FROM ' . $this->table;
-        }
+		$this->select = 'SELECT ' . $columnsToFetch;
 		return $this;
 	}
 
@@ -161,12 +152,7 @@ class Table
 
 		$columns_implode = implode(', ', $tableColumns);
 		$this->selectIsCalled = true;
-        if($this->from != null) {
-            $this->select = 'SELECT ' . $columns_implode . $this->from;
-        }
-        else{
-            $this->select = 'SELECT ' . $columns_implode . ' FROM ' . $this->table;
-        }
+		$this->select = 'SELECT ' . $columns_implode . $this->from;
 		return $this;
 	}
 
@@ -188,17 +174,16 @@ class Table
 	public function distinct( $columns = ['*'] ) {
 		$columns_implode = implode(',', $columns);
 		$this->selectIsCalled = true;
-        $this->select = 'SELECT DISTINCT ' . $columns_implode . ' FROM ' . $this->table;
-		$this->query = $this->select . " " . $this->query;
+        $this->select = 'SELECT DISTINCT ' . $columns_implode;
 		return $this;
 	}
 
-	public function where( $column, $value = null, $operator = '=', $linker = 'AND' ) {
+	public function where( $column, $value , $operator = '=', $linker = 'AND' , $wherecolumn = true) {
 		if ( $this->whereIsCalled ) {
-			$this->where .= $linker . " ";
+			$this->where .= " " . $linker . " ";
 		} else {
 			$this->whereIsCalled = true;
-			$this->where = " WHERE " . " ";
+			$this->where = " WHERE ";
 		}
 
 		if ( is_array($column) ) {
@@ -212,12 +197,22 @@ class Table
 				} else {
 					$linker = '';
 				}
-				$this->queryValues[] = $columnValue;
-				$this->where .= " $columnName $columnsOperator ? $linker";
+				if($wherecolumn){
+                    $this->where .= " $columnName $columnsOperator $columnValue $linker";
+                }
+				else {
+                    $this->queryValues[] = $columnValue;
+                    $this->where .= " $columnName $columnsOperator ? $linker";
+                }
 			}
 		} else {
-			$this->queryValues[] = $value;
-			$this->where .= " $column $operator ?";
+		    if($wherecolumn){
+                $this->where .= " $column $operator $value";
+            }
+		    else{
+                $this->queryValues[] = $value;
+                $this->where .= " $column $operator ?";
+            }
 		}
 		return $this;
 	}
@@ -297,23 +292,18 @@ class Table
 		return $this;
 	}
 
-	public function whereColumn( $firstColumn, $secondColumn, $linker = 'AND' ) {
-		if ( $this->whereIsCalled ) {
-			$this->where .= " $linker $firstColumn = $secondColumn";
-		} else {
-			$this->whereIsCalled = true;
-			$this->where = " WHERE $firstColumn = $secondColumn";
-		}
+	public function whereColumn( $firstColumn, $secondColumn, $operator = '=' , $linker = 'AND' ) {
+		$this->where($firstColumn , $secondColumn , $operator ,$linker , true);
 		return $this;
 	}
 
-	public function orWhereColumn( $firstColumn, $secondColumn ) {
-		$this->whereColumn($firstColumn, $secondColumn, 'OR');
+	public function orWhereColumn( $firstColumn, $secondColumn , $operator = '=' ) {
+		$this->whereColumn($firstColumn, $secondColumn, $operator,'OR');
 		return $this;
 	}
 
 	public function whereNull( $column, $linker = 'AND', $not = false ) {
-		$type = $not ? 'NOT NULL' : 'NULL';
+		$type = $not ? 'IS NOT NULL' : 'IS NULL';
 		if ( $this->whereIsCalled ) {
 			$this->where .= " $linker $column $type";
 		} else {
@@ -423,7 +413,10 @@ class Table
 		return $this;
 	}
 
-	public function whereExists( $condition , $linker = 'AND' , $not = false){
+	public function whereExists( callable $callback , $linker = 'AND' , $not = false){
+        $query = new Table($this->table);
+        call_user_func($callback, $query);
+        $condition = $query->query;
         $type = $not ? 'NOT EXISTS' : 'EXISTS';
         if ( $this->whereIsCalled ) {
             $this->where .= " $linker $type($condition)";
@@ -434,28 +427,31 @@ class Table
         return $this;
     }
 
-    public function whereNotExists( $condition , $linker = 'AND'){
-        $this->whereExists($condition , $linker , true);
+    public function whereNotExists( callable $callback , $linker = 'AND'){
+        $this->whereExists($callback , $linker , true);
         return $this;
     }
 
-    public function orWhereExists( $condition ){
-        $this->whereExists($condition ,'OR');
+    public function orWhereExists( callable $callback ){
+        $this->whereExists($callback ,'OR');
         return $this;
     }
 
-    public function orWhereNotExists( $condition ){
-        $this->whereExists($condition , 'OR' , true);
+    public function orWhereNotExists( callable $callback ){
+        $this->whereExists($callback , 'OR' , true);
         return $this;
     }
 
-    public function whereSub($subquery , $operator = '=' , $value = null ,$column = null , $linker = 'AND'){
 
+    public function whereSub(callable $callback , $operator = '=' , $value = null ,$column = null , $linker = 'AND'){
+	    $query = new Table($this->table);
+        call_user_func($callback, $query);
+        $subquery = $query->query;
         if ( $this->whereIsCalled ) {
-            $this->where .= $linker . " ";
+            $this->where .= " " . $linker . " ";
         } else {
             $this->whereIsCalled = true;
-            $this->where = " WHERE " . " ";
+            $this->where = " WHERE ";
         }
 
         if( $column == null ) {
@@ -463,12 +459,17 @@ class Table
             $this->where .= "($subquery) $operator ?";
         }
         else{
-            $this->where = "($subquery) $operator $column";
+            $this->where .= "($subquery) $operator $column";
         }
         return $this;
     }
 
-    public function whereGroup( $wheres , $linker = 'AND' ){
+    public function whereGroup( callable $callback , $linker = 'AND' ){
+        $query = new Table($this->table);
+        $query->selectIsCalled = true;
+        $query->wheregroup = true;
+        call_user_func($callback, $query);
+        $wheres = $query->query;
         if ( $this->whereIsCalled ) {
             $this->where .= " $linker ($wheres)";
         } else {
@@ -528,12 +529,8 @@ class Table
 	}
 
 	public function count( $column = '*' ) {
-		$this->selectIsCalled = true;
-		if ( $this->whereIsCalled ) {
-			$this->query = "SELECT count($column) FROM $this->table $this->query";
-		} else {
-			$this->query = "SELECT count($column) FROM $this->table";
-		}
+        $this->selectIsCalled = true;
+        $this->select = "SELECT COUNT($column)";
 		return $this->aggregate();
 	}
 
@@ -554,12 +551,8 @@ class Table
 	}
 
 	private function SQLFunction( $function, $column ) {
-		$this->select = 'called';
-		if ( $this->whereIsCalled ) {
-			$this->query = "SELECT $function($column) FROM $this->table $this->query";
-		} else {
-			$this->query = "SELECT $function($column)  FROM  $this->table";
-		}
+		$this->selectIsCalled = true;
+        $this->select = "SELECT $function($column)";
 		return $this->aggregate();
 	}
 
@@ -570,7 +563,7 @@ class Table
 
 	public function selectRaw( $query ) {
 		$this->selectIsCalled = true;
-		$this->select = "SELECT $query FROM $this->table $this->query";
+		$this->select = "SELECT $query";
 		return $this;
 	}
 
@@ -712,9 +705,6 @@ class Table
             call_user_func($callback, $result);
             $this->query = $tempQuery;
             $iteration++;
-
-            print_r($this->query);
-            die();
         } while ( true );
     }
 
@@ -774,14 +764,11 @@ class Table
     }
 
 	private function aggregate() {
-		if ( $this->query == null ) {
-			throw new Exception('no query executed to be get');
-		} else {
-			$stmt = $this->pdo->prepare($this->query);
-			$stmt->execute($this->queryValues);
-			$result = $stmt->fetchColumn();
-			return $result;
-		}
+        $this->buildQuery();
+        $stmt = $this->pdo->prepare($this->query);
+        $stmt->execute($this->queryValues);
+        $result = $stmt->fetchColumn();
+        return $result;
 	}
 
 	public function first() {
@@ -818,11 +805,15 @@ class Table
         $this->query = $this->where." ".$this->groupby." ".$this->having;
 
         if ( $this->selectIsCalled == false ) {
-            if( $this->from != null ){
-                $this->select = "SELECT * $this->from";
-            }
-            else {
-                $this->select = "SELECT * FROM $this->table";
+            $this->select = "SELECT *";
+        }
+
+        if( $this->from != null ){
+            $this->select .= $this->from;
+        }
+        else {
+            if($this->wheregroup == false) {
+                $this->select .= " FROM $this->table";
             }
         }
 
