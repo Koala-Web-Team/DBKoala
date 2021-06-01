@@ -464,6 +464,11 @@ class Table
         return $this;
     }
 
+    public function orWhereSub(callable $callback , $operator = '=' , $value = null ,$column = null){
+        $this->whereSub($callback,$operator,$value,$column,'OR');
+        return $this;
+    }
+
     public function whereGroup( callable $callback , $linker = 'AND' ){
         $query = new Table($this->table);
         $query->selectIsCalled = true;

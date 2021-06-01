@@ -17,7 +17,7 @@ $result = $users->orderBy('dfd')
     ->join('contacts', 'users.id', 'contacts.user_id','=')
     ->whereSub(function ($query){
     $query->where('dfsf','dsfds')->where('sdfs','fd')->koalaSql();
-},'=','fgnfd')->whereSub(
+},'=','fgnfd')->orwhereSub(
     function ($query){
         $query->orwhereBetween('dfsf',[2,10])->orwhere('sdfs','fd')->koalaSql();
     },'>',null , 'sdfdf')
@@ -34,7 +34,7 @@ $result = $users->orderBy('dfd')
     })
     ->whereColumn('fdsf','dfsdf','>')
     ->WhereColumn('fdsf','dfsdf','<')
-    ->max('dfsf');
+    ->koalaSql();
 
 
 print_r($result);
