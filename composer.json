@@ -1,5 +1,5 @@
 {
-    "name": "koala/KoalaDB",
+    "name": "koala1/KoalaDB",
     "description": "this package is a php library used to allow developers to deal with the databases.",
     "keywords": ["KoalaDB","Mysql","PHP"],
     "authors": [
