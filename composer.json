@@ -1,5 +1,14 @@
 {
-    "type": "project",
+    "name": "koala/KoalaDB",
+    "description": "this package is a php library used to allow developers to deal with the databases.",
+    "keywords": ["KoalaDB","Mysql","PHP"],
+    "authors": [
+        {
+            "name": "Koala Team",
+            "role": "Software Engineers"
+        }
+    ],
+    "type": "library",
     "license": "proprietary",
     "require": {
         "php": ">=7.1.3",
