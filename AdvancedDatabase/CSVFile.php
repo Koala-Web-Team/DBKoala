@@ -45,6 +45,9 @@ class CSVFile implements FileInterface
     public function export( $type = null , $value = null )
     {
 
+        print_r($value);
+        die();
+
         if($value == null) {
            throw new \http\Exception\InvalidArgumentException('dfsf');
         }
@@ -66,6 +69,9 @@ class CSVFile implements FileInterface
             header('Content-Type: application/octet-stream');
             header("Content-Transfer-Encoding: Binary");
             header("Content-disposition: attachment; filename=\"export.csv\"");
+
+            print_r($value);
+            die();
 
             $stmt = $this->pdo->prepare($value);
             $stmt->execute();

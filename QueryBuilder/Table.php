@@ -21,6 +21,8 @@ class Table
 	private $union;
 	private $pdo;
 	private $where;
+	private $update;
+	private $delete;
 	private $having;
 
 	public function __construct( $table ) {
@@ -53,31 +55,47 @@ class Table
 
 		$values = array_values($columns);
 
-		$sql = "UPDATE $this->table SET $keys";
+        array_unshift($this->queryValues, ...$values);
+
 		if ( $id != null ) {
-			$sql .= " WHERE id = $id";
-		}
-		$stmt = $this->pdo->prepare($sql);
-		$stmt->execute($values);
+            $this->queryValues[] = $id;
+			$this->query = "UPDATE $this->table SET $keys WHERE id = ?";
+		}else{
+		    $this->update = "UPDATE $this->table SET $keys";
+		    $this->buildQuery();
+        }
+		$stmt = $this->pdo->prepare($this->query);
+		$stmt->execute($this->queryValues);
 	}
 
 	public function delete( $id = null ) {
-		if ( $this->whereIsCalled ) {
-			$this->query = 'DELETE FROM' . $this->table . " " . $this->query;
-		} else {
-			$this->query = 'DELETE FROM ' . $this->table;
-			if ( $id ) {
-				$this->whereIsCalled = true;
-				$this->queryValues[] = $id;
-				$this->query .= " WHERE id = ?";
-			}
-		}
-		return $this;
+//		if ( $this->whereIsCalled ) {
+//			$this->query = 'DELETE FROM' . $this->table . " " . $this->query;
+//		} else {
+//			$this->query = 'DELETE FROM ' . $this->table;
+//			if ( $id ) {
+//				$this->whereIsCalled = true;
+//				$this->queryValues[] = $id;
+//				$this->query .= " WHERE id = ?";
+//			}
+//		}
+//		return $this;
+
+        if ( $id != null ) {
+            $this->queryValues[] = $id;
+            $this->query = "DELETE FROM $this->table WHERE id = ?";
+        }else{
+            $this->delete = "DELETE FROM $this->table";
+            $this->buildQuery();
+        }
+        $stmt = $this->pdo->prepare($this->query);
+        $stmt->execute($this->queryValues);
 	}
 
 	public function truncate() {
 		$this->query = "TRUNCATE TABLE $this->table";
-		return $this;
+        $stmt = $this->pdo->prepare($this->query);
+        $stmt->execute();
 	}
 
 	public function select( $columns = ['*'] ) {
@@ -178,7 +196,7 @@ class Table
 		return $this;
 	}
 
-	public function where( $column, $value , $operator = '=', $linker = 'AND' , $wherecolumn = true) {
+	public function where( $column, $value , $operator = '=', $linker = 'AND' , $wherecolumn = false) {
 		if ( $this->whereIsCalled ) {
 			$this->where .= " " . $linker . " ";
 		} else {
@@ -826,7 +844,15 @@ class Table
             $this->query = " $this->select $this->join $this->query";
         }
         else{
-            $this->query = " $this->select $this->query";
+            if( $this->update != null ){
+                $this->query = "$this->update $this->query";
+            }
+            elseif( $this->delete != null ){
+                $this->query = "$this->delete $this->query";
+            }
+            else{
+                $this->query = " $this->select $this->query";
+            }
         }
 
         $this->query .= $this->orderBy." ".$this->take." ".$this->offset;
@@ -834,5 +860,6 @@ class Table
         if( $this->union != null ){
             $this->query = "(".$this->query.")".$this->union;
         }
+
     }
 }
