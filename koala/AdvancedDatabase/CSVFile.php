@@ -1,6 +1,6 @@
 <?php
 
-require_once("AdvancedDatabase/FileInterface.php");
+require_once("koala/AdvancedDatabase/FileInterface.php");
 
 class CSVFile implements FileInterface
 {
@@ -11,42 +11,32 @@ class CSVFile implements FileInterface
         $this->pdo = $pdo;
     }
 
-    public function import( $filepath, $type = null, $value = null )
+    public function import( $filepath, $value = null )
     {
-        if($type == 'table') {
-            if($value != null) {
-                $handle = fopen($filepath, "r");
-                if ($handle) {
-                    while (($line = fgetcsv($handle)) !== false) {
-                        try {
-                            $stmt = $this->pdo->prepare("INSERT INTO `$value` (`name`, `email`) VALUES (?,?)");
-                            $stmt->execute([$line[0], $line[1]]);
-                        } catch (Exception $ex) {
-                            echo $ex->getmessage();
-                        }
+        if($value != null) {
+            $handle = fopen($filepath, "r");
+            if ($handle) {
+                while (($line = fgetcsv($handle)) !== false) {
+                    try {
+                        $stmt = $this->pdo->prepare("INSERT INTO `$value` (`name`, `email`) VALUES (?,?)");
+                        $stmt->execute([$line[0], $line[1]]);
+                    } catch (Exception $ex) {
+                        echo $ex->getmessage();
                     }
-                    fclose($handle);
-                } else {
-                    echo "ERROR OPENING $filepath";
                 }
+                fclose($handle);
+            } else {
+                echo "ERROR OPENING $filepath";
             }
         }
-        elseif($type == 'query')
-        {
-            echo 'import query pdf'.'in folder'.' '.$filepath;
-        }
-        else
-        {
-            echo 'import database pdf'.'in folder'.' '.$filepath;
+        else{
+            throw new Exception('asdasd');
         }
 
     }
 
     public function export( $type = null , $value = null )
     {
-
-        print_r($value);
-        die();
 
         if($value == null) {
            throw new \http\Exception\InvalidArgumentException('dfsf');
@@ -69,9 +59,6 @@ class CSVFile implements FileInterface
             header('Content-Type: application/octet-stream');
             header("Content-Transfer-Encoding: Binary");
             header("Content-disposition: attachment; filename=\"export.csv\"");
-
-            print_r($value);
-            die();
 
             $stmt = $this->pdo->prepare($value);
             $stmt->execute();

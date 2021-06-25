@@ -1,9 +1,9 @@
 <?php
 
 
-require_once("AdvancedDatabase/Factory.php");
-require_once("AdvancedDatabase/FileItem.php");
-require_once("AdvancedDatabase/CSVFile.php");
+require_once("koala/AdvancedDatabase/Factory.php");
+require_once("koala/AdvancedDatabase/FileItem.php");
+require_once("koala/AdvancedDatabase/CSVFile.php");
 
 class FileFactory extends Factory {
 

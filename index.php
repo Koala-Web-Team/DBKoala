@@ -1,45 +1,36 @@
 <?php
 
-require_once("QueryBuilder/Table.php");
-require_once("AdvancedDatabase/Database.php");
-require_once("AdvancedDatabase/FileFactory.php");
+require_once("koala/helper.php");
 
-
-
-//$users = new Table('users');
-//$member = new Table('members');
-//    $first = $member->whereNotNull('first_name')->koalaSql();
+$users = new Table('users');
+$member = new Table('members');
+$first = $member->whereRaw('name = dss')->koalaSql();
 //
-//$result = $users->orderBy('dfd')
-//    ->union($first)
-//    ->take(3)
-//    ->groupByRaw('fgfdg , dfsdf')
-//    ->join('contacts', 'users.id', 'contacts.user_id','=')
-//    ->whereSub(function ($query){
-//    $query->where('dfsf','dsfds')->where('sdfs','fd')->koalaSql();
-//},'=','fgnfd')->orwhereSub(
-//    function ($query){
-//        $query->orwhereBetween('dfsf',[2,10])->orwhere('sdfs','fd')->koalaSql();
-//    },'>',null , 'sdfdf')
-//    ->whereGroup(function ($q){
-//        $q->where('target_language', 'fdg')->orWhere('source_language', 'dsf')->
-//            whereExists(function ($query) {
-//                $query->from('members')
-//                ->select(['dfd','dfs'])
-//                    ->where('orders.user_id', 'users.id')->koalaSql();
-//            })->koalaSql();
-//    })->whereExists(function ($query) {
-//        $query->from('orders')
-//            ->where('orders.user_id', 'users.id')->koalaSql();
-//    })
-//    ->whereColumn('fdsf','dfsdf','>')
-//    ->WhereColumn('fdsf','dfsdf','<')
-//    ->koalaSql();
+$result = $users->orderBy('name')
+    ->take(3)
+    ->groupByRaw('city, state')
+    ->whereSub(function ($query){
+    $query->where('age','60','>')->whereRaw('name LIKE \'a%\'')->koalaSql();
+},'=','fgnfd')->whereGroup(function ($q){
+        $q->where('target_language', 'arabic')->orWhere('source_language', 'english')->
+            whereExists(function ($query) {
+                $query->from('members')
+                ->selectRaw('price * 1.023 as price_with_tax')
+                    ->havingRaw('orders.user_id = users.id')->koalaSql();
+            })->koalaSql();
+    })->koalaSql();
 
+//$result = $users->selectRaw('price * 1.025 as price_with_tax')
+//    ->from('members')
+//    ->get();
+//$users->selectRaw('count(*) as user_count, status')
+//    ->where('status', '1', '<>')
+//    ->groupBy('status')
+//    ->get();
 
-$query = new Table('user');
-$sql = $query->where('fname','hggj')->koalaSql();
-$users = new FileFactory();
+//$query = new Table('user');
+//$sql = $query->where('fname','hggj')->koalaSql();
+//$users = new FileFactory();
 
 //$user->create([
 //    'name' => 'mohamed osama',
@@ -51,10 +42,31 @@ $users = new FileFactory();
 //    'verified' => 'no'
 //]);
 
-$type = new FileItem('csv');
+//$language = ';;';
+//
+//$result = $users->whereGroup(function ($q) use ($language) {
+//    $q->where('target_language', 'dfs')->orWhere('source_language', 'dfs');
+//})->wheresub(function ($query) {
+//    $query->selectRaw('price * 1.023 as price_with_tax')
+//        ->from('membership')
+//        ->whereColumn('membership.user_id', 'users.id')
+//        ->limit(1);
+//})->koalaSql();
 
-$file = $users->create_file($type);
 
-$file->export('table',$sql);
+//$type = new FileItem('csv');
+//
+//$file = $users->create_file($type);
+//
+//$file->export('table',$sql);
+
+//$backup = new Database();
+//
+//$backup->backup();
+
+//$news = new Table('news');
+//
+//$result = $news->where('id',1)->get('json');
 
 
+print_r($result);

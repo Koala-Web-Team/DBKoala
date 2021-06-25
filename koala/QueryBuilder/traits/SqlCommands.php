@@ -1,6 +1,5 @@
 <?php
 
-
 trait SqlCommands
 {
     public function create( $columns = [] ) {

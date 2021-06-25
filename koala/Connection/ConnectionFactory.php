@@ -1,18 +1,20 @@
 <?php
 
-require_once ("Connection/MysqlConnection.php");
-require __DIR__. '//..//'."/vendor/autoload.php";
-$dotenv = \Dotenv\Dotenv::createImmutable(__DIR__.'//..//'.'/');
+require_once("koala/Connection/MysqlConnection.php");
+require __DIR__ . '//..//' . "../vendor/autoload.php";
+$dotenv = \Dotenv\Dotenv::createImmutable(__DIR__ . '//../..//');
 $dotenv->load();
 
 class ConnectionFactory
 {
 
     private $dbms;
+    private $database;
     private $pdo;
 
     public function __construct(){
         $this->dbms = $_ENV['DB_CONNECTION'];
+        $this->database = $_ENV['DB_DATABASE'];
         $this->setConnection();
     }
 
@@ -47,6 +49,14 @@ class ConnectionFactory
 
     public function setPdo($pdo){
         $this->pdo = $pdo;
+    }
+
+    public function getDatabase(){
+        return $this->database;
+    }
+
+    public function setDatabase($database) {
+        $this->database = $database;
     }
 
 }

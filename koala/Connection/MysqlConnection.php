@@ -1,6 +1,6 @@
 <?php
 
-require_once ("Connection/IConnection.php");
+require_once("koala/Connection/IConnection.php");
 
 class MysqlConnection implements IConnection
 {

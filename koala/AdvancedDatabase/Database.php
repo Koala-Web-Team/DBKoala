@@ -1,13 +1,15 @@
 <?php
 
-require_once("Connection/ConnectionFactory.php");
+require_once("koala/Connection/ConnectionFactory.php");
 
 class Database
 {
     private $pdo;
+    private $db;
 
     public function __construct(){
         $connect = new ConnectionFactory();
+        $this->db = $connect->getDatabase();
         $this->pdo = $connect->getPdo();
     }
 
@@ -46,7 +48,7 @@ class Database
             $result = $statement->fetchAll();
             $output = '';
             foreach ($result as $table) {
-                $show_table_query = "SHOW CREATE TABLE " . $table["Tables_in_buisness"] . "";
+                $show_table_query = "SHOW CREATE TABLE " . $table["Tables_in_$this->db"] . "";
                 $statement = $this->pdo->prepare($show_table_query);
                 $statement->execute();
                 $show_table_result = $statement->fetchAll();
@@ -54,7 +56,7 @@ class Database
                 foreach ($show_table_result as $show_table_row) {
                     $output .= "\n\n" . $show_table_row["Create Table"] . ";\n\n";
                 }
-                $select_query = "SELECT * FROM " . $table["Tables_in_buisness"] . "";
+                $select_query = "SELECT * FROM " . $table["Tables_in_$this->db"] . "";
                 $statement = $this->pdo->prepare($select_query);
                 $statement->execute();
                 $total_row = $statement->rowCount();
