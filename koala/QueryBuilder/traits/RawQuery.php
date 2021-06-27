@@ -3,7 +3,7 @@
 trait RawQuery
 {
     public function raw( $query ) {
-        $this->query = $query;
+        $this->raw = $query;
         return $this;
     }
 
@@ -49,6 +49,21 @@ trait RawQuery
         } else {
             $this->orderBy .= " , $sql ";
         }
+        return $this;
+    }
+
+    public function groupByRaw( $sql ) {
+        if( $this->groupby == null ) {
+            $this->groupby = " GROUP BY " . $sql;
+        }
+        else{
+            $this->groupby .= ", $sql ";
+        }
+        return $this;
+    }
+
+    public function fromRaw( $expression ) {
+        $this->from = " FROM $expression";
         return $this;
     }
 }

@@ -65,7 +65,8 @@ trait SqlCommands
 
     public function truncate() {
         $this->query = "TRUNCATE TABLE $this->table";
-        return $this;
+        $stmt = $this->pdo->prepare($this->query);
+        $stmt->execute();
     }
 
     public function select( $columns = ['*'] ) {

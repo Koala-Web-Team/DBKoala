@@ -4,7 +4,7 @@
 trait Joins
 {
     public function join( $table , $first , $second , $operator = "=" , $type = "INNER" ) {
-        $this->join = " $type JOIN $table ON $first $operator $second";
+        $this->join .= " $type JOIN $table ON $first $operator $second";
         return $this;
     }
 

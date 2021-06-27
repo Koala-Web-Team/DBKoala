@@ -2,13 +2,13 @@
 
 namespace App\Entity;
 
-use App\Repository\NewsRepository;
+use App\Repository\EventsRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass=NewsRepository::class)
+ * @ORM\Entity(repositoryClass=EventsRepository::class)
  */
-class News
+class Events
 {
     /**
      * @ORM\Id
@@ -26,12 +26,6 @@ class News
      * @ORM\Column(type="text")
      */
     private $description;
-
-    /**
-     * @ORM\ManyToOne(targetEntity=Courses::class, inversedBy="news_id")
-     * @ORM\JoinColumn(nullable=false)
-     */
-    private $course;
 
     public function getId(): ?int
     {
@@ -58,18 +52,6 @@ class News
     public function setDescription(string $description): self
     {
         $this->description = $description;
-
-        return $this;
-    }
-
-    public function getCourse(): ?Courses
-    {
-        return $this->course;
-    }
-
-    public function setCourse(?Courses $course): self
-    {
-        $this->course = $course;
 
         return $this;
     }

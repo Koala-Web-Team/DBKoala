@@ -299,7 +299,7 @@ trait Conditionals
         $query->selectIsCalled = true;
         $query->wheregroup = true;
         call_user_func($callback, $query);
-        $wheres = $query->query;
+        $wheres = str_replace('WHERE','',$query->query);
         if ( $this->whereIsCalled ) {
             $this->where .= " $linker ($wheres)";
         } else {
