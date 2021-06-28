@@ -134,18 +134,13 @@ class Table
     }
 
     public function groupBy( $columns ) {
+        $groupbycolumns = is_array($columns) ? implode(' , ', $columns) : $columns;
 
-	    if(is_array($columns)) {
-            $columns_implode = implode(',', $columns);
-            if($this->groupby == null){
-                $this->groupby = " GROUP BY " . $columns_implode;
-            }
-            else{
-                $this->groupby .= " , $columns_implode ";
-            }
+        if($this->groupby == null){
+            $this->groupby = " GROUP BY " . $groupbycolumns;
         }
-	    else{
-            $this->groupby = " GROUP BY " . $columns;
+        else{
+            $this->groupby .= " , $groupbycolumns ";
         }
         return $this;
     }

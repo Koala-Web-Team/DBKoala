@@ -2,46 +2,56 @@
 
 require_once("koala/helper.php");
 
-$companies = new Table('packaging_companies');
-
-
-//$result = $companies->selectRaw("packaging_companies.id,packaging_companies.name_en,packaging_companies.details,states.name as state")
-//    ->where("states.name","active","=")
-//    ->join("states", "packaging_companies.stateId", "states.id", "=")
+//$result = $companies->join("states","packaging_companies.stateId","states.id")
 //    ->orderBy('name_en')
+//    ->where("states.name", 'active')
+//    ->koalaSql();
+
+//$result = $events
+//    ->where("title","999 OR 1=1","=")
 //    ->get();
 //$member = new Table('members');
 //$first = $member->whereRaw('name = dss')->koalaSql();
-////
-$result = $companies->orderBy('sdfd','desc')
-    ->take(5)
-    ->where('name_ar','ekea')
-    ->whereDate('created_at','27-12-2031')
-    ->leftjoin("states as a", "packaging_companies.stateId", "states.id", "=")
-    ->rightjoin("users as s", "phones.userId", "users.id")
-    ->whereGroup(function ($query) {
-    $query->select(['dsf'])->whereNull('details')
-        ->WhereNull('image')->koalaSql();
-})->whereSub(function ($query) {
-        $query->where('name_ar', 'sdfdf')->orWhere('name_en', 'dfs')->koalaSql();
-    },'=',null , 'name_en')
-    ->orwhereNotExists(function ($query) {
-        $query->fromSub(function ($query) {
-            $query->select(['dsvsdfs'])->from('dido')->where('name_ar', 'sdfdf')->orWhere('name_en', 'dfs')->koalaSql();
-        },'osama')->where('target_language', 'sdfdf')->orWhere('source_language', 'dfs')->
-            whereSub(function ($query) {
-                $query->where('name_ar', 'sdfdf')->orWhere('name_en', 'dfs')->koalaSql();
-            },'=','dfdf')
-            ->koalaSql();
-    })->orwhereSub(function ($query) {
-        $query->select(['dsvsdfs'])->where('name_ar', 'sdfdf')->orWhere('name_en', 'dfs')->fromRaw('mido as mi')->koalaSql();
-    },'=','ddf')->orwhereColumn('name_en','name_ar' , '>')
 
-    ->koalaSql();
+//$courses = new Table('courses');
+//
+//$result = $courses->orderBy('sdfd','DESC')
+//    ->groupBy(['dfdsf','ghgh'])
+//    ->havingBetween('svf',[2,23])
+//    ->take(5)
+//    ->where('name_ar','ekea')
+//    ->whereIn('mido',[1,2,3,4])
+//    ->orwhereNotBetween('dsfs',[2,12])
+//    ->leftjoin("states as a", "packaging_companies.stateId", "states.id")
+//    ->rightjoin("users as s", "phones.userId", "users.id")
+//    ->whereGroup(function ($query) {
+//    $query->whereNull('details')
+//        ->WhereNull('image')->koalaSql();
+//})->whereSub(function ($query) {
+//        $query->where('name_ar', 'sdfdf')->orWhere('name_en', 'dfs')->koalaSql();
+//    },'=',null , 'name_en')
+//    ->orwhereNotExists(function ($query) {
+//        $query->fromSub(function ($query) {
+//            $query->select(['dsvsdfs'])->from('dido')->where('name_ar', 'sdfdf')->orWhere('name_en', 'dfs')->koalaSql();
+//        },'osama')->where('target_language', 'sdfdf')->orWhere('source_language', 'dfs')->
+//            orwhereSub(function ($query) {
+//                $query->where('name_ar', 'sdfdf')->orWhere('name_en', 'dfs')->koalaSql();
+//            },'=','dfdf')
+//            ->koalaSql();
+//    })->orwhereSub(function ($query) {
+//        $query->select(['dsvsdfs'])->where('name_ar', 'sdfdf')->orWhere('name_en', 'dfs')->fromRaw('mido as mi')->koalaSql();
+//    },'=','ddf')->whereColumn('name_en','name_ar','>')->having('dsfsf','dsf','>')
+//    ->HavingBetween('dsfdfdsf',[2,12])
+//    ->koalaSql();
+//
 
-//$result = $users->selectRaw('price * 1.025 as price_with_tax')
-//    ->from('members')
-//    ->get();
+
+// $result = $courses->whereRaw('title = ?','AND',['c++ course'])
+//     ->orHavingRaw('title = ?',['java course'])
+//     ->groupBy(['description','hours'])
+//     ->groupByRaw('title dsfs')
+//     ->groupBy(['sdfd'])
+//     ->koalaSql();
 //$users->selectRaw('count(*) as user_count, status')
 //    ->where('status', '1', '<>')
 //    ->groupBy('status')

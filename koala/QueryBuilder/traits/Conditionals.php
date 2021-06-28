@@ -48,6 +48,10 @@ trait Conditionals
     }
 
     public function whereBetween( $column, $values = [], $linker = 'AND', $not = false ) {
+
+        if(count($values) > 2){
+            throw new InvalidArgumentException('only two values allowed as an array of values');
+        }
         array_push($this->queryValues, ...$values);
 
         $bind_params = "";
@@ -244,10 +248,10 @@ trait Conditionals
         $condition = $query->query;
         $type = $not ? 'NOT EXISTS' : 'EXISTS';
         if ( $this->whereIsCalled ) {
-            $this->where .= " $linker $type($condition)";
+            $this->where .= " $linker $type ($condition)";
         } else {
             $this->whereIsCalled = true;
-            $this->where = " WHERE $type($condition)";
+            $this->where = " WHERE $type ($condition)";
         }
         return $this;
     }
@@ -309,7 +313,7 @@ trait Conditionals
         return $this;
     }
 
-    public function having( $column, $value = null, $operator = '=', $linker = 'and' ) {
+    public function having( $column, $value = null, $operator = '=', $linker = 'AND' ) {
         if ( $this->havingIsCalled ) {
             $this->having .= " ".$linker . " ";
         } else {
@@ -329,6 +333,10 @@ trait Conditionals
     }
 
     public function havingBetween( $column, $values = [], $linker = 'AND', $not = false ) {
+
+        if(count($values) > 2){
+            throw new InvalidArgumentException('only two values allowed as an array of values');
+        }
         array_push($this->queryValues, ...$values);
 
         $bind_params = "";
